@@ -5,13 +5,15 @@ import toast from 'react-hot-toast'
 import { Toaster } from 'react-hot-toast'
 import GuideHeader from './GuideHeader'
 import StepList from './StepList'
+import PaywallOverlay from './PaywallOverlay'
 import type { Guide, Step } from '@/lib/types'
 
 interface GuideEditorProps {
   guide: Guide & { steps: Step[] }
+  isLocked?: boolean
 }
 
-export default function GuideEditor({ guide: initialGuide }: GuideEditorProps) {
+export default function GuideEditor({ guide: initialGuide, isLocked = false }: GuideEditorProps) {
   const [guide, setGuide] = useState(initialGuide)
   const [steps, setSteps] = useState<Step[]>(initialGuide.steps ?? [])
 
@@ -70,6 +72,7 @@ export default function GuideEditor({ guide: initialGuide }: GuideEditorProps) {
 
   return (
     <>
+      {isLocked && <PaywallOverlay />}
       <Toaster
         position="bottom-right"
         toastOptions={{
