@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiqlog</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <div class="logo-dot"></div>
+        <span class="logo-text">Quiqlog</span>
+      </div>
+      <div id="status-badge" class="status-badge status-idle">
+        <span id="status-dot" class="status-dot"></span>
+        <span id="status-text">Idle</span>
+      </div>
+    </div>
+
+    <!-- Not logged in state -->
+    <div id="auth-section" class="section" style="display:none;">
+      <p class="hint-text">Log in to start recording guides.</p>
+      <a id="login-link" class="btn btn-primary" href="#" target="_blank">
+        Open Quiqlog
+      </a>
+    </div>
+
+    <!-- Tab picker section (shown when user clicks "Start Recording") -->
+    <div id="tab-picker-section" class="section" style="display:none;">
+      <p class="hint-text">Which tab do you want to record? 👇</p>
+      <div id="tab-list" class="tab-list"></div>
+      <p id="tab-picker-hint" class="tab-picker-hint">Pick a tab above — then we'll get rolling 🎬</p>
+      <button id="confirm-tab-btn" class="btn btn-primary" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="12" r="10"/>
+        </svg>
+        <span>Start Recording</span>
+      </button>
+    </div>
+
+    <!-- Processing section (shown after 2s while stop is in progress) -->
+    <div id="processing-section" class="section" style="display:none;">
+      <div class="spinner"></div>
+      <p class="processing-title">Turning your clicks into a guide ✨</p>
+      <p class="hint-text">Almost there — uploading your steps and screenshots.</p>
+    </div>
+
+    <!-- Recording section -->
+    <div id="recording-section" class="section">
+      <div id="step-count-display" class="step-count" style="display:none;">
+        <span id="step-count">0</span>
+        <span class="step-count-label">steps recorded</span>
+      </div>
+
+      <button id="record-btn" class="btn btn-primary">
+        <svg id="record-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="12" r="10"/>
+        </svg>
+        <span id="record-label">Start Recording</span>
+      </button>
+
+      <p class="hint-text">
+        Click <strong>Start Recording</strong>, then interact with any webpage.<br/>
+        Every click is automatically captured.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <a id="dashboard-link" href="#" target="_blank" class="footer-link">
+        Open Dashboard →
+      </a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

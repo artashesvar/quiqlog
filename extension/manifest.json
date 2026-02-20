@@ -1,0 +1,54 @@
+{
+  "manifest_version": 3,
+  "name": "Quiqlog — Instant How-To Guides",
+  "short_name": "Quiqlog",
+  "version": "1.0.0",
+  "description": "Record your clicks and instantly create beautiful, shareable how-to guides.",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/content.js"],
+      "css": ["src/content/styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Quiqlog"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "externally_connectable": {
+    "matches": [
+      "http://localhost:3000/*",
+      "https://*.vercel.app/*",
+      "https://quiqlog.com/*"
+    ]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["src/content/styles.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
