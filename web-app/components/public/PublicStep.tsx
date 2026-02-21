@@ -9,7 +9,7 @@ interface PublicStepProps {
 
 export default function PublicStep({ step, stepNumber }: PublicStepProps) {
   return (
-    <Card className="overflow-hidden">
+    <Card animate className="overflow-hidden">
       {/* Step header */}
       <div className="flex items-center gap-3 px-5 pt-5 pb-3">
         <span className="flex-shrink-0 w-7 h-7 rounded-full bg-accent text-white text-sm font-bold flex items-center justify-center shadow-glow">
@@ -22,7 +22,7 @@ export default function PublicStep({ step, stepNumber }: PublicStepProps) {
 
       {/* Screenshot */}
       {step.screenshot_url && (
-        <div className="mx-5 mb-3 rounded-md overflow-hidden border border-border">
+        <div className="mx-5 mb-3 rounded-md overflow-hidden border border-border transition-shadow duration-300 hover:shadow-soft-lg">
           <Image
             src={step.screenshot_url}
             alt={step.title || `Step ${stepNumber}`}

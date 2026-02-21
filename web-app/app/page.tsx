@@ -24,22 +24,22 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 pb-16 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-sm font-medium mb-8">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-sm font-medium mb-8 animate-fade-in">
           <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
           No writing required
         </div>
 
-        <h1 className="font-heading font-bold text-5xl sm:text-6xl text-text-primary leading-tight mb-6">
+        <h1 className="font-heading font-bold text-5xl sm:text-6xl text-text-primary leading-tight mb-6 opacity-0 animate-slide-up">
           Turn your clicks into<br />
           <span className="text-gradient">beautiful how-to guides</span>
         </h1>
 
-        <p className="text-text-secondary text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="text-text-secondary text-lg max-w-2xl mx-auto mb-10 leading-relaxed opacity-0 animate-slide-up stagger-2">
           Record your screen, capture every click, and instantly generate a polished,
           shareable step-by-step guide — without writing a single word.
         </p>
 
-        <div className="flex items-center justify-center gap-4 flex-wrap">
+        <div className="flex items-center justify-center gap-4 flex-wrap opacity-0 animate-slide-up stagger-3">
           <Link href="/signup">
             <Button size="lg">
               Start for Free →
@@ -80,10 +80,10 @@ export default function LandingPage() {
               title: 'Share anywhere',
               body: 'Publish your guide and get a shareable link. Send it to teammates, clients, or embed it in your docs — no account needed to view.',
             },
-          ].map(({ step, icon, title, body }) => (
+          ].map(({ step, icon, title, body }, i) => (
             <div
               key={step}
-              className="flex flex-col gap-4 p-6 rounded-lg border border-border bg-background-secondary shadow-soft"
+              className={`flex flex-col gap-4 p-6 rounded-lg border border-border bg-background-secondary shadow-soft transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-card-hover hover:border-accent/30 opacity-0 animate-card-enter stagger-${i + 1}`}
             >
               <div className="flex items-start justify-between">
                 <span className="text-3xl">{icon}</span>
@@ -98,7 +98,7 @@ export default function LandingPage() {
 
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
-        <div className="rounded-xl border border-accent/20 bg-accent/5 p-10 text-center shadow-glow">
+        <div className="rounded-xl border border-accent/20 bg-accent/5 p-10 text-center shadow-glow transition-shadow duration-500 hover:shadow-glow-lg">
           <h2 className="font-heading font-bold text-3xl text-text-primary mb-3">
             Ready to create your first guide?
           </h2>

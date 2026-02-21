@@ -35,7 +35,7 @@ export default function GuideCard({ guide }: GuideCardProps) {
   }
 
   return (
-    <Card className="p-4 flex flex-col gap-3 hover:border-accent/30 transition-colors">
+    <Card hoverable animate className="p-4 flex flex-col gap-3">
       {/* Title + public badge */}
       <div className="flex items-start justify-between gap-2">
         <Link

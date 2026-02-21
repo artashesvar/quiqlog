@@ -42,7 +42,7 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <Card className="p-8 text-center">
+      <Card animate className="p-8 text-center shadow-soft-lg">
         <div className="text-4xl mb-4">📬</div>
         <h2 className="font-heading font-semibold text-lg text-text-primary mb-2">
           Check your email
@@ -59,7 +59,7 @@ export default function SignupPage() {
   }
 
   return (
-    <Card className="p-8">
+    <Card animate className="p-8 shadow-soft-lg">
       <h1 className="font-heading font-semibold text-xl text-text-primary mb-1">
         Create your account
       </h1>

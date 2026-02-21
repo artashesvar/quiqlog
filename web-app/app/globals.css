@@ -65,4 +65,15 @@
     backdrop-filter: blur(12px);
     border: 1px solid #2A3147;
   }
+
+  /* Staggered animation delays for card grids */
+  .stagger-1 { animation-delay: 0ms; }
+  .stagger-2 { animation-delay: 80ms; }
+  .stagger-3 { animation-delay: 160ms; }
+  .stagger-4 { animation-delay: 240ms; }
+  .stagger-5 { animation-delay: 320ms; }
+  .stagger-6 { animation-delay: 400ms; }
+  .stagger-7 { animation-delay: 480ms; }
+  .stagger-8 { animation-delay: 560ms; }
+  .stagger-9 { animation-delay: 640ms; }
 }

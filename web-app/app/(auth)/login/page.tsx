@@ -34,7 +34,7 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="p-8">
+    <Card animate className="p-8 shadow-soft-lg">
       <h1 className="font-heading font-semibold text-xl text-text-primary mb-1">
         Welcome back
       </h1>

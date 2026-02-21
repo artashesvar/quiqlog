@@ -1,0 +1,486 @@
+{
+  "$schema": "Custom design system specification for Quiqlog",
+  "$description": "Reference this file when building new components, pages, or features to ensure visual consistency across the entire application.",
+
+  "theme": "dark",
+
+  "colors": {
+    "background": {
+      "primary": "#0F1117",
+      "secondary": "#161B27",
+      "tertiary": "#1E2535",
+      "usage": "primary = page/body background, secondary = cards/nav/panels, tertiary = input fields/hover states"
+    },
+    "border": {
+      "default": "#2A3147",
+      "subtle": "#1E2535",
+      "usage": "default = card borders, dividers, input borders. subtle = softer separators. All elements default to border-border via globals.css base layer."
+    },
+    "accent": {
+      "default": "#6366F1",
+      "hover": "#818CF8",
+      "subtle": "#312E81",
+      "light": "#E0E7FF",
+      "usage": "default = primary buttons, links, highlights, logo dot. hover = button/link hover states. subtle/light = rarely used, available for light-on-dark accents."
+    },
+    "text": {
+      "primary": "#F8FAFC",
+      "secondary": "#94A3B8",
+      "muted": "#64748B",
+      "usage": "primary = headings, body text, strong labels. secondary = descriptions, supporting text. muted = meta info, placeholders, hints, timestamps."
+    },
+    "semantic": {
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "error": "#EF4444",
+      "usage": "Used for badges, status indicators, and inline validation messages. Each has a translucent bg variant at 10% opacity (e.g. bg-error/10) and border at 20% opacity."
+    },
+    "selection": {
+      "background": "rgba(99, 102, 241, 0.3)",
+      "text": "#F8FAFC"
+    }
+  },
+
+  "typography": {
+    "fonts": {
+      "heading": {
+        "family": "Space Grotesk",
+        "weights": [400, 500, 600, 700],
+        "source": "Google Fonts",
+        "cssVariable": "--font-space-grotesk",
+        "tailwindClass": "font-heading",
+        "usage": "All h1-h6 headings, logo text, step titles, card titles"
+      },
+      "body": {
+        "family": "Work Sans",
+        "weights": [400, 500, 600],
+        "source": "Google Fonts",
+        "cssVariable": "--font-work-sans",
+        "tailwindClass": "font-body",
+        "usage": "Body text, buttons, labels, input text, descriptions"
+      }
+    },
+    "scale": {
+      "hero-heading": {
+        "classes": "font-heading font-bold text-5xl sm:text-6xl leading-tight",
+        "usage": "Landing page hero headline only"
+      },
+      "page-heading": {
+        "classes": "font-heading font-bold text-3xl sm:text-4xl leading-tight",
+        "usage": "Public guide title, section headings on landing page"
+      },
+      "section-heading": {
+        "classes": "font-heading font-bold text-3xl",
+        "usage": "Landing page section titles (How it works, CTA)"
+      },
+      "card-page-title": {
+        "classes": "font-heading font-semibold text-2xl",
+        "usage": "Dashboard page title, editor guide title"
+      },
+      "dialog-heading": {
+        "classes": "text-xl font-bold text-text-primary",
+        "usage": "Modal/dialog headings (e.g. paywall overlay)"
+      },
+      "card-title": {
+        "classes": "font-heading font-semibold text-lg",
+        "usage": "Public step titles, feature card titles, empty state titles"
+      },
+      "item-title": {
+        "classes": "font-heading font-semibold text-base",
+        "usage": "Guide card titles, CTA banner title, step card inline titles"
+      },
+      "auth-heading": {
+        "classes": "font-heading font-semibold text-xl",
+        "usage": "Login/signup page headings"
+      },
+      "body-large": {
+        "classes": "text-lg leading-relaxed",
+        "usage": "Hero subtitle text"
+      },
+      "body-default": {
+        "classes": "text-sm leading-relaxed",
+        "usage": "Descriptions, paragraphs, feature card body text"
+      },
+      "body-small": {
+        "classes": "text-xs",
+        "usage": "Meta info, timestamps, step counts, hint text, error messages"
+      },
+      "label": {
+        "classes": "text-sm font-medium text-text-secondary",
+        "usage": "Form input labels"
+      }
+    },
+    "rendering": {
+      "antialiasing": "-webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale"
+    }
+  },
+
+  "spacing": {
+    "containerMaxWidths": {
+      "default": "max-w-6xl",
+      "narrow": "max-w-3xl",
+      "authForm": "max-w-md",
+      "usage": "default = dashboard, landing page. narrow = public guide viewer. authForm = login/signup pages."
+    },
+    "containerPadding": "px-4 sm:px-6",
+    "pagePaddingY": "py-8",
+    "sectionPaddingY": "py-16 or py-20",
+    "cardPadding": {
+      "default": "p-4",
+      "comfortable": "p-5",
+      "spacious": "p-6",
+      "form": "p-8",
+      "cta": "p-10"
+    },
+    "gaps": {
+      "tight": "gap-2",
+      "default": "gap-3",
+      "comfortable": "gap-4",
+      "section": "gap-6",
+      "page": "gap-8"
+    }
+  },
+
+  "borderRadius": {
+    "sm": "8px (rounded-sm)",
+    "default": "12px (rounded or rounded-md)",
+    "lg": "16px (rounded-lg)",
+    "xl": "20px (rounded-xl)",
+    "2xl": "24px (rounded-2xl)",
+    "full": "9999px (rounded-full)",
+    "usage": {
+      "badges": "rounded-sm (8px)",
+      "inputs": "rounded-md (12px)",
+      "buttons": "rounded-md (12px)",
+      "cards": "rounded-lg (16px)",
+      "dialogs": "rounded-xl (20px)",
+      "pills": "rounded-full",
+      "avatarDots": "rounded-full"
+    }
+  },
+
+  "shadows": {
+    "soft": {
+      "value": "0 2px 16px rgba(0, 0, 0, 0.25), 0 1px 4px rgba(0, 0, 0, 0.15)",
+      "usage": "Default card shadow, landing page feature cards"
+    },
+    "soft-lg": {
+      "value": "0 8px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2)",
+      "usage": "Auth form cards, screenshot hover states"
+    },
+    "soft-xl": {
+      "value": "0 16px 56px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.25)",
+      "usage": "Paywall/modal dialogs"
+    },
+    "glow": {
+      "value": "0 0 20px rgba(99, 102, 241, 0.2), 0 0 6px rgba(99, 102, 241, 0.15)",
+      "usage": "Primary buttons, logo dot, accent-bordered containers, step number badges"
+    },
+    "glow-lg": {
+      "value": "0 0 40px rgba(99, 102, 241, 0.25), 0 0 12px rgba(99, 102, 241, 0.2)",
+      "usage": "Primary button hover, CTA section hover"
+    },
+    "card-hover": {
+      "value": "0 12px 36px rgba(0, 0, 0, 0.35), 0 0 16px rgba(99, 102, 241, 0.08)",
+      "usage": "Card hover state (hoverable cards, landing page feature cards)"
+    }
+  },
+
+  "components": {
+    "Button": {
+      "file": "web-app/components/ui/Button.tsx",
+      "base": "inline-flex items-center justify-center gap-2 rounded-md font-body font-medium transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-accent/50 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed",
+      "variants": {
+        "primary": {
+          "classes": "bg-accent hover:bg-accent-hover text-white shadow-glow hover:shadow-glow-lg",
+          "usage": "Main CTAs, form submit buttons, 'New Guide' button"
+        },
+        "secondary": {
+          "classes": "bg-background-tertiary hover:bg-border text-text-primary border border-border hover:border-border",
+          "usage": "Secondary actions (e.g. 'See How It Works', 'Publish/Unpublish')"
+        },
+        "ghost": {
+          "classes": "bg-transparent hover:bg-background-tertiary text-text-secondary hover:text-text-primary",
+          "usage": "Tertiary actions (e.g. 'Edit', 'Copy Link', 'Sign out')"
+        },
+        "danger": {
+          "classes": "bg-error/10 hover:bg-error/20 text-error border border-error/30 hover:border-error/50",
+          "usage": "Destructive actions (e.g. 'Delete')"
+        }
+      },
+      "sizes": {
+        "sm": "px-3 py-1.5 text-sm",
+        "md": "px-4 py-2 text-sm (default)",
+        "lg": "px-6 py-3 text-base"
+      },
+      "states": {
+        "loading": "Shows spinner SVG, button disabled",
+        "disabled": "opacity-50, cursor-not-allowed"
+      }
+    },
+
+    "Card": {
+      "file": "web-app/components/ui/Card.tsx",
+      "base": "bg-background-secondary rounded-lg border border-border shadow-soft transition-all duration-300 ease-out",
+      "props": {
+        "hoverable": "cursor-pointer hover:border-accent/40 hover:shadow-card-hover hover:-translate-y-1",
+        "glow": "shadow-glow",
+        "animate": "opacity-0 animate-card-enter (entrance animation)"
+      },
+      "usage": "Guide cards, auth forms, step cards, public step display, any content container"
+    },
+
+    "Input": {
+      "file": "web-app/components/ui/Input.tsx",
+      "base": "w-full rounded-md bg-background-tertiary border px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all duration-150",
+      "states": {
+        "default": "border-border hover:border-border",
+        "error": "border-error",
+        "focus": "ring-2 ring-accent/50 border-accent"
+      },
+      "label": "text-sm font-medium text-text-secondary",
+      "errorText": "text-xs text-error",
+      "hintText": "text-xs text-text-muted",
+      "usage": "Login/signup forms, any text input field"
+    },
+
+    "Badge": {
+      "file": "web-app/components/ui/Badge.tsx",
+      "base": "inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium",
+      "variants": {
+        "default": "bg-background-tertiary text-text-secondary border border-border",
+        "success": "bg-success/10 text-success border border-success/20",
+        "warning": "bg-warning/10 text-warning border border-warning/20",
+        "error": "bg-error/10 text-error border border-error/20",
+        "accent": "bg-accent/10 text-accent border border-accent/20"
+      },
+      "usage": "Status indicators (Public/Draft), step counts, tags"
+    },
+
+    "AppNav": {
+      "file": "web-app/components/AppNav.tsx",
+      "classes": "border-b border-border bg-background-secondary/80 backdrop-blur-sm sticky top-0 z-40",
+      "innerContainer": "max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between",
+      "logo": {
+        "dot": "w-2.5 h-2.5 rounded-full bg-accent shadow-glow",
+        "text": "font-heading font-bold text-base text-text-primary"
+      }
+    },
+
+    "StepNumberBadge": {
+      "editorVariant": "w-6 h-6 rounded-full bg-accent/15 text-accent text-xs font-semibold flex items-center justify-center",
+      "publicVariant": "w-7 h-7 rounded-full bg-accent text-white text-sm font-bold flex items-center justify-center shadow-glow",
+      "usage": "Numbered step indicators in editor and public guide views"
+    },
+
+    "PaywallOverlay": {
+      "file": "web-app/components/editor/PaywallOverlay.tsx",
+      "backdrop": "fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm animate-fade-in",
+      "dialog": "bg-background-secondary border border-border rounded-xl p-8 max-w-md w-full mx-4 shadow-soft-xl animate-scale-in",
+      "iconContainer": "flex items-center justify-center w-12 h-12 rounded-xl bg-accent/10 border border-accent/20",
+      "usage": "Full-screen modal overlay for subscription upsell"
+    },
+
+    "ExtensionCTA": {
+      "file": "web-app/components/dashboard/ExtensionCTA.tsx",
+      "classes": "flex items-start gap-4 p-4 rounded-lg border border-accent/30 bg-accent/5 shadow-glow animate-fade-in transition-shadow duration-300 hover:shadow-glow-lg",
+      "usage": "Banner prompting Chrome extension install"
+    },
+
+    "EmptyState": {
+      "classes": "text-center py-20 rounded-lg border border-dashed border-border animate-fade-in",
+      "icon": "text-5xl mb-4 (emoji)",
+      "heading": "font-heading font-semibold text-lg text-text-primary mb-2",
+      "description": "text-text-muted text-sm max-w-xs mx-auto",
+      "usage": "Shown when no guides exist"
+    },
+
+    "InlineEditableField": {
+      "titleInput": "flex-1 font-heading font-medium text-base text-text-primary bg-transparent border-none outline-none focus:ring-0 placeholder:text-text-muted",
+      "textarea": "w-full resize-none bg-transparent text-sm text-text-secondary placeholder:text-text-muted border-none outline-none focus:ring-0 overflow-hidden",
+      "usage": "Step titles and descriptions in editor"
+    }
+  },
+
+  "patterns": {
+    "logo": {
+      "structure": "Colored dot + text",
+      "dot": "rounded-full bg-accent shadow-glow",
+      "dotSizes": {
+        "small": "w-2 h-2",
+        "default": "w-2.5 h-2.5",
+        "large": "w-3 h-3"
+      },
+      "text": "font-heading font-bold text-text-primary",
+      "textSizes": {
+        "small": "text-sm",
+        "default": "text-base",
+        "large": "text-lg",
+        "hero": "text-2xl"
+      }
+    },
+
+    "links": {
+      "inline": "text-accent hover:text-accent-hover transition-colors",
+      "subtle": "text-text-muted hover:text-text-secondary text-sm transition-colors",
+      "cardTitle": "font-heading font-semibold text-base text-text-primary hover:text-accent transition-colors"
+    },
+
+    "textGradient": {
+      "classes": "bg-gradient-to-r from-accent to-accent-hover bg-clip-text text-transparent",
+      "utilityClass": "text-gradient",
+      "usage": "Hero headline accent text"
+    },
+
+    "glassCard": {
+      "classes": "card-glass",
+      "definition": "background: rgba(22, 27, 39, 0.8); backdrop-filter: blur(12px); border: 1px solid #2A3147",
+      "usage": "Semi-transparent card effect (utility available, used sparingly)"
+    },
+
+    "screenshotContainer": {
+      "classes": "rounded-md overflow-hidden border border-border transition-shadow duration-300 hover:shadow-soft-lg",
+      "image": "w-full h-auto object-cover",
+      "usage": "Wraps step screenshots in both editor and public views"
+    },
+
+    "featureListItem": {
+      "checkmark": "flex-shrink-0 w-4 h-4 rounded-full bg-accent/15 flex items-center justify-center",
+      "checkIcon": "w-2.5 h-2.5 text-accent",
+      "text": "text-sm text-text-secondary",
+      "usage": "Paywall feature list, any checklist"
+    },
+
+    "sectionDivider": {
+      "classes": "border-t border-border",
+      "usage": "Used within cards (action rows), between page sections, in footers"
+    },
+
+    "pageLayout": {
+      "fullWidth": "min-h-screen bg-background",
+      "centeredAuth": "min-h-screen bg-background flex items-center justify-center p-4",
+      "appShell": "min-h-screen bg-background flex flex-col",
+      "contentArea": "flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8"
+    },
+
+    "gridLayouts": {
+      "guideCards": "grid gap-4 sm:grid-cols-2 lg:grid-cols-3",
+      "featureCards": "grid sm:grid-cols-3 gap-6",
+      "steppedList": "flex flex-col gap-6"
+    }
+  },
+
+  "animations": {
+    "fadeIn": {
+      "class": "animate-fade-in",
+      "definition": "opacity 0→1 over 0.3s ease-out",
+      "usage": "CTA banners, empty states, paywall backdrop"
+    },
+    "slideUp": {
+      "class": "animate-slide-up",
+      "definition": "opacity 0→1, translateY 12px→0 over 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+      "usage": "Hero headline, subtitle, CTA buttons on landing page"
+    },
+    "scaleIn": {
+      "class": "animate-scale-in",
+      "definition": "opacity 0→1, scale 0.96→1 over 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+      "usage": "Paywall dialog entrance"
+    },
+    "cardEnter": {
+      "class": "animate-card-enter",
+      "definition": "opacity 0→1, translateY 16px→0, scale 0.98→1 over 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+      "usage": "Card entrance animation (guide cards, step cards). Use with animate prop on Card component."
+    },
+    "staggering": {
+      "classes": "stagger-1 through stagger-9",
+      "increment": "80ms per step (0ms, 80ms, 160ms, ...640ms)",
+      "usage": "Applied to card grids and step lists for cascading entrance. Wrap items in a div with stagger-N class."
+    },
+    "microInteractions": {
+      "buttonPress": "active:scale-[0.97]",
+      "cardHoverLift": "hover:-translate-y-1",
+      "transitionDefaults": "transition-all duration-200 ease-out (buttons), transition-all duration-300 ease-out (cards)",
+      "colorTransition": "transition-colors (links, text hover)"
+    }
+  },
+
+  "icons": {
+    "approach": "Inline SVGs — no icon library used",
+    "style": {
+      "strokeBased": "fill='none' strokeWidth={1.5} stroke='currentColor' (Heroicons-style outline)",
+      "filledDots": "fill='currentColor' (drag handle dots)",
+      "sizing": "w-4 h-4 (small), w-6 h-6 (medium icons), w-2.5 h-2.5 (checkmarks inside circles)"
+    },
+    "usedIcons": {
+      "spinner": "Circular loading spinner (SVG with animate-spin h-4 w-4)",
+      "dragHandle": "6-dot grip pattern (2x3 grid of circles, 16x16 viewBox)",
+      "trash": "Trash/delete icon (15x15 viewBox, filled path)",
+      "lock": "Padlock icon (24x24 viewBox, Heroicons-style stroke)",
+      "checkmark": "Check/tick mark (24x24 viewBox, strokeWidth 3)",
+      "emojis": "Used as decorative icons: 🧩 (extension), 📖 (guides empty), 📬 (email sent), 🎬 ✏️ 🔗 (feature cards), ☕ (footer)"
+    },
+    "guidelines": "Prefer inline SVGs over icon libraries. Use currentColor for fill/stroke so icons inherit text color. Emoji usage is acceptable for decorative/non-functional icons."
+  },
+
+  "scrollbar": {
+    "width": "6px",
+    "track": "#161B27 (background-secondary)",
+    "thumb": "#2A3147 (border-default)",
+    "thumbHover": "#6366F1 (accent)"
+  },
+
+  "focusStates": {
+    "default": "focus:outline-none focus:ring-2 focus:ring-accent/50",
+    "inputExtra": "focus:border-accent",
+    "inlineEditable": "focus:ring-0 (no ring for inline editable fields to keep them feeling seamless)"
+  },
+
+  "disabledStates": {
+    "buttons": "disabled:opacity-50 disabled:cursor-not-allowed",
+    "general": "opacity-60 cursor-not-allowed"
+  },
+
+  "zIndex": {
+    "navbar": "z-40",
+    "modal": "z-50"
+  },
+
+  "responsiveBreakpoints": {
+    "sm": "640px — 2-column grid, larger text sizes",
+    "lg": "1024px — 3-column grid for guide cards",
+    "patterns": "Mobile-first. Landing hero text scales from text-5xl→text-6xl at sm. Public guide title from text-3xl→text-4xl at sm. Container padding from px-4→px-6 at sm."
+  },
+
+  "cssCustomProperties": {
+    "--background": "#0F1117",
+    "--background-secondary": "#161B27",
+    "--background-tertiary": "#1E2535",
+    "--border": "#2A3147",
+    "--accent": "#6366F1",
+    "--accent-hover": "#818CF8",
+    "--text-primary": "#F8FAFC",
+    "--text-secondary": "#94A3B8",
+    "--font-space-grotesk": "Space Grotesk variable font",
+    "--font-work-sans": "Work Sans variable font"
+  },
+
+  "guidelines": {
+    "newComponents": [
+      "Use bg-background-secondary for card/panel backgrounds, never bg-background (that's for page body).",
+      "Always use border border-border on cards and containers.",
+      "Use font-heading for headings and font-body for everything else.",
+      "Use the Button component (not raw <button>) for all interactive buttons.",
+      "Use the Card component for any content container — set hoverable for clickable cards, animate for entrance animations.",
+      "Use the Input component for form fields to get consistent styling, labels, and error display.",
+      "Use the Badge component for status labels and tags.",
+      "Apply shadow-soft as default elevation for cards; shadow-glow for accent-highlighted elements.",
+      "Use transition-all duration-200 ease-out for interactive elements, duration-300 for cards.",
+      "Inline SVGs preferred over icon libraries. Use currentColor for icon colors.",
+      "Use text-text-primary for main content, text-text-secondary for descriptions, text-text-muted for meta/hints.",
+      "For semantic colors (success/warning/error), use translucent backgrounds (color/10) with matching text and borders (color/20).",
+      "Apply animate-card-enter + stagger-N classes for list item entrance animations.",
+      "Keep max-w-6xl for main content areas, max-w-3xl for reading-focused pages.",
+      "Use gap-based spacing (flexbox/grid) rather than margin for layout gaps."
+    ]
+  }
+}

@@ -8,7 +8,7 @@ interface GuideListProps {
 export default function GuideList({ guides }: GuideListProps) {
   if (guides.length === 0) {
     return (
-      <div className="text-center py-20 rounded-lg border border-dashed border-border">
+      <div className="text-center py-20 rounded-lg border border-dashed border-border animate-fade-in">
         <div className="text-5xl mb-4">📖</div>
         <h3 className="font-heading font-semibold text-lg text-text-primary mb-2">
           No guides yet
@@ -22,8 +22,10 @@ export default function GuideList({ guides }: GuideListProps) {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {guides.map((guide) => (
-        <GuideCard key={guide.id} guide={guide} />
+      {guides.map((guide, i) => (
+        <div key={guide.id} className={`stagger-${Math.min(i + 1, 9)}`}>
+          <GuideCard guide={guide} />
+        </div>
       ))}
     </div>
   )

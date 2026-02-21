@@ -39,11 +39,12 @@ async function upsertSubscription(subscription: any) {
   const admin = createAdminClient()
 
   // Map Polar subscription status to our internal status
-  const status: 'active' | 'canceled' | 'inactive' = (() => {
+  const status: 'active' | 'trialing' | 'canceled' | 'inactive' = (() => {
     switch (subscription.status) {
       case 'active':
-      case 'trialing':
         return 'active'
+      case 'trialing':
+        return 'trialing'
       case 'canceled':
         return 'canceled'
       default:

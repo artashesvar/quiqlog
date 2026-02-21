@@ -41,7 +41,7 @@ export default function ExtensionCTA() {
   if (extensionInstalled) return null
 
   return (
-    <div className="flex items-start gap-4 p-4 rounded-lg border border-accent/30 bg-accent/5">
+    <div className="flex items-start gap-4 p-4 rounded-lg border border-accent/30 bg-accent/5 shadow-glow animate-fade-in transition-shadow duration-300 hover:shadow-glow-lg">
       <div className="text-2xl flex-shrink-0">🧩</div>
       <div className="flex-1 min-w-0">
         <h3 className="font-heading font-semibold text-base text-text-primary">

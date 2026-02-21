@@ -46,14 +46,18 @@ const config: Config = {
         '2xl': '24px',
       },
       boxShadow: {
-        soft: '0 4px 24px rgba(0, 0, 0, 0.3)',
-        'soft-lg': '0 8px 40px rgba(0, 0, 0, 0.4)',
-        glow: '0 0 20px rgba(99, 102, 241, 0.25)',
-        'glow-lg': '0 0 40px rgba(99, 102, 241, 0.3)',
+        soft: '0 2px 16px rgba(0, 0, 0, 0.25), 0 1px 4px rgba(0, 0, 0, 0.15)',
+        'soft-lg': '0 8px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2)',
+        'soft-xl': '0 16px 56px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.25)',
+        glow: '0 0 20px rgba(99, 102, 241, 0.2), 0 0 6px rgba(99, 102, 241, 0.15)',
+        'glow-lg': '0 0 40px rgba(99, 102, 241, 0.25), 0 0 12px rgba(99, 102, 241, 0.2)',
+        'card-hover': '0 12px 36px rgba(0, 0, 0, 0.35), 0 0 16px rgba(99, 102, 241, 0.08)',
       },
       animation: {
-        'fade-in': 'fadeIn 0.2s ease-out',
-        'slide-up': 'slideUp 0.3s ease-out',
+        'fade-in': 'fadeIn 0.3s ease-out forwards',
+        'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'scale-in': 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'card-enter': 'cardEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
       },
       keyframes: {
         fadeIn: {
@@ -61,8 +65,16 @@ const config: Config = {
           '100%': { opacity: '1' },
         },
         slideUp: {
-          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '0%': { opacity: '0', transform: 'translateY(12px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        scaleIn: {
+          '0%': { opacity: '0', transform: 'scale(0.96)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        cardEnter: {
+          '0%': { opacity: '0', transform: 'translateY(16px) scale(0.98)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
       },
     },

@@ -59,7 +59,9 @@ export default async function PublicGuidePage({ params }: Props) {
 
         <div className="flex flex-col gap-6">
           {guide.steps?.map((step: any, index: number) => (
-            <PublicStep key={step.id} step={step} stepNumber={index + 1} />
+            <div key={step.id} className={`stagger-${Math.min(index + 1, 9)}`}>
+              <PublicStep step={step} stepNumber={index + 1} />
+            </div>
           ))}
         </div>
 

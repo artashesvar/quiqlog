@@ -60,7 +60,7 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete }: StepC
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className="overflow-hidden">
+      <Card animate className="overflow-hidden">
         {/* Step header with drag handle */}
         <div className="flex items-center gap-3 px-4 pt-4 pb-2">
           {/* Drag handle */}
@@ -110,7 +110,7 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete }: StepC
 
         {/* Screenshot */}
         {step.screenshot_url && (
-          <div className="mx-4 mb-3 rounded-md overflow-hidden border border-border">
+          <div className="mx-4 mb-3 rounded-md overflow-hidden border border-border transition-shadow duration-300 hover:shadow-soft-lg">
             <Image
               src={step.screenshot_url}
               alt={`Step ${stepNumber} screenshot`}

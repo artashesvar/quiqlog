@@ -56,6 +56,10 @@ POLAR_SERVER=sandbox   # or "production"
 
 **Paywall system:** Free users get 10 guides/month. `canCreateGuide()` and `resolvePaywall()` in `lib/paywall.ts` are the single source of truth — both the API and UI import from here. Subscription state is stored in the `user_subscriptions` table and managed via Polar.sh webhooks at `/api/polar/webhook`.
 
+**User profile menu:** `AppNav` component renders a user icon dropdown with: email (+ Pro badge if subscribed), subscription status (renewal or cancellation date), "Manage Subscription" link (opens Polar customer portal via `/api/polar/portal`), and sign out. Subscription props (`isPro`, `isCanceled`, `hasSubscription`, `subscriptionEnd`) are computed in `(app)/layout.tsx` and passed down. The portal API route creates an authenticated Polar customer session using `POST /v1/customer-sessions/`.
+
+**Subscription statuses in DB:** `active`, `trialing`, `canceled`, `inactive`. The webhook preserves Polar's `trialing` status as distinct from `active`. Canceled subscriptions with a future `current_period_end` retain access (grace period) but the UI shows "Your Pro ends [date]" instead of the Pro badge.
+
 **Auth flow:** Supabase Auth → OAuth callback at `/api/auth/callback` → middleware protects `(app)` routes → `TokenSync` component pushes the Supabase access token into `chrome.storage.local` so the extension can make authenticated API calls.
 
 ### Extension (Chrome MV3, vanilla JS)

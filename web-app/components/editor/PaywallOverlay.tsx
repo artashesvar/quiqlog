@@ -32,9 +32,9 @@ export default function PaywallOverlay() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm animate-fade-in">
       <div
-        className="bg-background-secondary border border-border rounded-xl p-8 max-w-md w-full mx-4 shadow-soft-lg animate-slide-up"
+        className="bg-background-secondary border border-border rounded-xl p-8 max-w-md w-full mx-4 shadow-soft-xl animate-scale-in"
         role="dialog"
         aria-modal="true"
         aria-labelledby="paywall-title"
@@ -96,7 +96,7 @@ export default function PaywallOverlay() {
         <button
           onClick={handleUpgrade}
           disabled={loading}
-          className="w-full bg-accent hover:bg-accent-hover disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors text-sm"
+          className="w-full bg-accent hover:bg-accent-hover disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 text-sm shadow-glow hover:shadow-glow-lg"
         >
           {loading ? 'Opening checkout…' : 'Upgrade to Pro'}
         </button>
