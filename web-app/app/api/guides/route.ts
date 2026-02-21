@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateSlug } from '@/lib/utils'
+import { canCreateGuide } from '@/lib/paywall'
 
 export async function GET() {
   const supabase = await createClient()
@@ -32,6 +33,14 @@ export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const allowed = await canCreateGuide(user.id, supabase)
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Monthly free guide limit reached. Upgrade to Pro for unlimited guides.' },
+      { status: 403 }
+    )
+  }
 
   const body = await request.json().catch(() => ({}))
   const title = body.title ?? 'Untitled Guide'

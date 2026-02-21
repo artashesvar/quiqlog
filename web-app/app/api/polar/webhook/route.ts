@@ -32,7 +32,7 @@ export const POST = webhookHandler
 async function upsertSubscription(subscription: any) {
   const userId = subscription.metadata?.user_id as string | undefined
   if (!userId) {
-    console.warn('[Polar] Webhook received without user_id in metadata')
+    console.error(`[Polar] Webhook received without user_id in metadata — subscription: ${subscription.id}, status: ${subscription.status}`)
     return
   }
 

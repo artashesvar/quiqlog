@@ -155,6 +155,18 @@ myawsomeapp/
 
 ---
 
+### ✅ Phase 10 — Payments (Polar)
+- [x] `supabase/subscriptions-migration.sql` — `user_subscriptions` table with RLS + guide index
+- [x] `components/editor/PaywallOverlay.tsx` — paywall modal shown when free limit reached
+- [x] `app/api/polar/checkout/route.ts` — creates Polar embedded checkout session with `user_id` metadata
+- [x] `app/api/polar/webhook/route.ts` — handles subscription lifecycle events, upserts to Supabase
+- [x] `lib/paywall.ts` — shared `resolvePaywall()` and `canCreateGuide()` utilities (UTC, handles active/trialing/canceled)
+- [x] Server-side guide creation enforcement in `POST /api/guides` (returns 403 when limit reached)
+- [x] Both editor pages use shared `resolvePaywall()` — no duplicate logic
+- [x] `FREE_GUIDES_PER_MONTH = 10` constant wired into paywall logic
+- [x] `trialing` status mapped to `active` (2-week trial support)
+- [x] End-to-end tested in sandbox: paywall → checkout → webhook → Supabase `status: active` → paywall gone
+
 ## 🟡 Remaining Work (Next Sessions)
 
 ### Setup — DONE ✅
@@ -171,7 +183,8 @@ myawsomeapp/
 
 ### Phase 12 — Production Deploy
 - [ ] Deploy web app to Vercel (connect GitHub repo, set env vars)
-- [ ] Update `NEXT_PUBLIC_APP_URL` in `.env.local` to production URL
+- [ ] Set production env vars: `NEXT_PUBLIC_APP_URL`, `POLAR_ACCESS_TOKEN`, `POLAR_PRODUCT_ID`, `POLAR_WEBHOOK_SECRET`, `POLAR_SERVER=production`
+- [ ] Update Polar production webhook URL to Vercel deployment URL
 - [ ] Update `APP_URL` in `extension/src/background/background.js` and `extension/src/popup/popup.js`
 - [ ] Update `externally_connectable` in `extension/manifest.json` with production domain
 - [ ] Submit extension to Chrome Web Store
