@@ -69,17 +69,26 @@ async function annotateScreenshot(dataUrl, x, y) {
 
 // ─── Screenshot Upload ───────────────────────────────────────────────────────
 
+async function blobToBase64(blob) {
+  const buffer = await blob.arrayBuffer()
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary)
+}
+
 async function uploadScreenshot(blob) {
-  const formData = new FormData()
-  formData.append('file', blob, 'screenshot.png')
-  formData.append('sessionId', sessionId)
+  const base64 = await blobToBase64(blob)
 
   const response = await fetch(`${APP_URL}/api/extension/upload`, {
     method: 'POST',
     headers: {
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${authToken}`,
     },
-    body: formData,
+    body: JSON.stringify({ sessionId, screenshot: base64 }),
   })
 
   if (!response.ok) {

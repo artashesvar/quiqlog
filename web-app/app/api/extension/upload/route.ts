@@ -3,6 +3,9 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { SUPABASE_STORAGE_BUCKET } from '@/lib/constants'
 import { nanoid } from 'nanoid'
 
+// Allow up to 5 MB per screenshot (base64 inflates ~33% over raw)
+export const config = { api: { bodyParser: { sizeLimit: '5mb' } } }
+
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
@@ -28,15 +31,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const formData = await request.formData()
-  const file = formData.get('file') as File | null
-  const sessionId = formData.get('sessionId') as string | null
+  const body = await request.json()
+  const { sessionId, screenshot } = body as { sessionId: string | null; screenshot: string | null }
 
-  if (!file || !sessionId) {
-    return NextResponse.json({ error: 'Missing file or sessionId' }, { status: 400 })
+  if (!screenshot || !sessionId) {
+    return NextResponse.json({ error: 'Missing screenshot or sessionId' }, { status: 400 })
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer())
+  const buffer = Buffer.from(screenshot, 'base64')
   const path = `${user.id}/pending/${sessionId}/${nanoid()}.png`
 
   const { error: uploadError } = await admin.storage
