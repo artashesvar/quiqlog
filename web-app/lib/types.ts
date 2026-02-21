@@ -33,7 +33,8 @@ export interface RecordedStep {
   x: number
   y: number
   label: string
-  screenshotBase64: string
+  screenshotBase64?: string
+  screenshotUrl?: string | null
   url: string
   pageTitle: string
 }

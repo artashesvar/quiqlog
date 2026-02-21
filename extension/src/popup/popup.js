@@ -1,6 +1,6 @@
 // Quiqlog Popup Script
 
-const APP_URL = 'http://localhost:3000' // Update before deploy
+const APP_URL = 'https://app.quiqlog.com'
 
 const recordBtn = document.getElementById('record-btn')
 const recordLabel = document.getElementById('record-label')

@@ -55,12 +55,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create guide' }, { status: 500 })
   }
 
-  // Process each step: upload screenshot and insert step record
+  // Process each step: use pre-uploaded URL or fall back to inline base64
   const stepInserts = await Promise.all(
     steps.map(async (step: RecordedStep, index: number) => {
       let screenshotUrl: string | null = null
 
-      if (step.screenshotBase64) {
+      if (step.screenshotUrl) {
+        // New flow: screenshot already uploaded by the extension
+        screenshotUrl = step.screenshotUrl
+      } else if (step.screenshotBase64) {
+        // Legacy flow: upload inline base64 (backward compat)
         try {
           const buffer = base64ToBuffer(step.screenshotBase64)
           const path = `${user.id}/${guide.id}/${nanoid()}.png`

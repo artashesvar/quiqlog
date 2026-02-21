@@ -42,7 +42,7 @@
     "matches": [
       "http://localhost:3000/*",
       "https://*.vercel.app/*",
-      "https://quiqlog.com/*"
+      "https://app.quiqlog.com/*"
     ]
   },
   "web_accessible_resources": [

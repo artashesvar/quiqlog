@@ -1,17 +1,16 @@
 // Quiqlog Background Service Worker
 // Handles: recording state, screenshot capture, annotation, session upload
 
-const APP_URL = 'http://localhost:3000' // Update to production URL before deploy
+const APP_URL = 'https://app.quiqlog.com'
 
 // ─── In-memory state (avoids read/write race conditions) ─────────────────────
 let recording = false
 let steps = []
 let authToken = null
 let targetTabId = null // tab the user selected to record; null = record all tabs
+let sessionId = null   // unique ID per recording session, used in upload path
 
 // Load persisted state on startup.
-// Note: steps are NOT persisted (screenshots exceed the 10 MB storage quota),
-// so a service worker restart during a recording session will lose in-flight steps.
 chrome.storage.local.get(['recording', 'authToken'], (result) => {
   recording = result.recording ?? false
   authToken = result.authToken ?? null
@@ -64,12 +63,31 @@ async function annotateScreenshot(dataUrl, x, y) {
   ctx.fillStyle = '#FFD700'
   ctx.fill()
 
-  const annotatedBlob = await canvas.convertToBlob({ type: 'image/png' })
-  return new Promise((resolve) => {
-    const reader = new FileReader()
-    reader.onloadend = () => resolve(reader.result)
-    reader.readAsDataURL(annotatedBlob)
+  // Return Blob directly instead of converting to base64 data URL
+  return canvas.convertToBlob({ type: 'image/png' })
+}
+
+// ─── Screenshot Upload ───────────────────────────────────────────────────────
+
+async function uploadScreenshot(blob) {
+  const formData = new FormData()
+  formData.append('file', blob, 'screenshot.png')
+  formData.append('sessionId', sessionId)
+
+  const response = await fetch(`${APP_URL}/api/extension/upload`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: formData,
   })
+
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.status}`)
+  }
+
+  const data = await response.json()
+  return data.url
 }
 
 // ─── Click queue — processes one at a time to prevent race conditions ─────────
@@ -85,16 +103,30 @@ async function processClick({ x, y, label, url, pageTitle }) {
   if (!recording) return
 
   try {
-    const screenshotBase64 = await captureAndAnnotateTab(x, y)
+    const screenshotBlob = await captureAndAnnotateTab(x, y)
+    let screenshotUrl = null
 
-    steps.push({ x, y, label, url, pageTitle, screenshotBase64 })
+    if (screenshotBlob && authToken) {
+      // Attempt upload with one retry
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          screenshotUrl = await uploadScreenshot(screenshotBlob)
+          break
+        } catch (err) {
+          console.warn(`[Quiqlog] Upload attempt ${attempt + 1} failed:`, err)
+          if (attempt === 0) {
+            await new Promise((r) => setTimeout(r, 1000))
+          }
+        }
+      }
+    }
 
-    // Screenshots are too large for chrome.storage.local (10 MB quota).
-    // Keep steps in memory only; persist just the count for the popup badge.
+    // Store only metadata + URL (no base64 blob in memory)
+    steps.push({ x, y, label, url, pageTitle, screenshotUrl })
+
     await chrome.storage.local.set({ stepCount: steps.length })
-
     chrome.runtime.sendMessage({ type: 'STEP_COUNT', count: steps.length }).catch(() => {})
-    console.log(`[Quiqlog] Step ${steps.length} recorded: "${label}"`)
+    console.log(`[Quiqlog] Step ${steps.length} recorded: "${label}" (screenshot: ${screenshotUrl ? 'yes' : 'no'})`)
   } catch (err) {
     console.error('[Quiqlog] Error processing click:', err)
   }
@@ -105,6 +137,7 @@ async function processClick({ x, y, label, url, pageTitle }) {
 async function startRecording(tabId = null) {
   recording = true
   steps = []
+  sessionId = crypto.randomUUID()
   targetTabId = tabId
   clickQueue = Promise.resolve() // reset queue in case it was left in a rejected state
   await chrome.storage.local.set({ recording: true, stepCount: 0 })
@@ -125,9 +158,6 @@ async function startRecording(tabId = null) {
         chrome.scripting.executeScript({ target: { tabId }, files: ['src/content/content.js'] }),
         chrome.scripting.insertCSS({ target: { tabId }, files: ['src/content/styles.css'] }),
       ]).catch((err) => console.warn('[Quiqlog] Re-injection failed:', err))
-      // The re-injected script calls syncRecordingState() on init which will read
-      // recording=true from storage. Also send SET_RECORDING as a belt-and-suspenders
-      // guarantee in case syncRecordingState() hasn't completed yet.
       await chrome.tabs.sendMessage(tabId, { type: 'SET_RECORDING', value: true }).catch(() => {})
     }
   }
@@ -142,8 +172,6 @@ async function stopRecording() {
   await chrome.action.setBadgeText({ text: '' })
 
   // Wait for any in-progress click processing to finish.
-  // Use try/catch because a quota error in processClick rejects the queue,
-  // which would otherwise prevent stopRecording from completing.
   try {
     await clickQueue
   } catch (err) {
@@ -160,7 +188,7 @@ async function stopRecording() {
     return
   }
 
-  console.log(`[Quiqlog] Submitting ${steps.length} steps...`)
+  console.log(`[Quiqlog] Submitting ${steps.length} steps (metadata only)...`)
 
   try {
     const response = await fetch(`${APP_URL}/api/extension/session`, {
@@ -171,7 +199,9 @@ async function stopRecording() {
       },
       body: JSON.stringify({
         title: steps[0]?.pageTitle ?? 'New Guide',
-        steps,
+        steps: steps.map(({ x, y, label, url, pageTitle, screenshotUrl }) => ({
+          x, y, label, url, pageTitle, screenshotUrl,
+        })),
       }),
     })
 
@@ -180,6 +210,7 @@ async function stopRecording() {
     const { guideId } = await response.json()
     await chrome.tabs.create({ url: `${APP_URL}/dashboard/guides/${guideId}/editor` })
     steps = []
+    sessionId = null
     await chrome.storage.local.set({ stepCount: 0 })
   } catch (err) {
     console.error('[Quiqlog] Failed to submit session:', err)
