@@ -106,7 +106,7 @@ export default function GuideEditor({ guide: initialGuide, isLocked = false }: G
           ← Back to Dashboard
         </Link>
 
-        <GuideHeader guide={guide} onUpdate={updateGuide} />
+        <GuideHeader guide={guide} onUpdate={updateGuide} isReadOnly={guide.is_public} />
 
         {/* Badge — right-4 aligns its right edge with the step screenshot images (mx-4) */}
         <div className="lg:absolute lg:right-4 lg:top-1">
@@ -144,6 +144,7 @@ export default function GuideEditor({ guide: initialGuide, isLocked = false }: G
           onUpdate={updateStep}
           onDelete={deleteStep}
           onReorder={reorderSteps}
+          isReadOnly={guide.is_public}
         />
 
         {steps.length === 0 && (

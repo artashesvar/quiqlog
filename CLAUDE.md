@@ -62,6 +62,8 @@ POLAR_SERVER=sandbox   # or "production"
 
 **Auth flow:** Supabase Auth → OAuth callback at `/api/auth/callback` → middleware protects `(app)` routes → `TokenSync` component pushes the Supabase access token into `chrome.storage.local` so the extension can make authenticated API calls.
 
+**Editor read-only mode:** When a guide is published (`is_public = true`), the editor becomes read-only. `GuideEditor` derives `isReadOnly = guide.is_public` from reactive state and passes it down to `GuideHeader` (title input), `StepList` (DnD reordering blocked in `handleDragEnd`), and `StepCard` (step title input, description textarea, drag handle, and delete button are all disabled/hidden). The Publish/Unpublish button remains interactive at all times.
+
 ### Extension (Chrome MV3, vanilla JS)
 
 - `background/background.js` — Service worker: manages recording state, captures screenshots via `chrome.tabs.captureVisibleTab()` (600ms rate limit), annotates clicks using OffscreenCanvas (golden circle overlay), sends completed session to `/api/extension/session`

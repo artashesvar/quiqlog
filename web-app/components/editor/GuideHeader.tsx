@@ -6,9 +6,10 @@ import type { Guide } from '@/lib/types'
 interface GuideHeaderProps {
   guide: Guide
   onUpdate: (updates: Partial<Guide>) => Promise<void>
+  isReadOnly?: boolean
 }
 
-export default function GuideHeader({ guide, onUpdate }: GuideHeaderProps) {
+export default function GuideHeader({ guide, onUpdate, isReadOnly = false }: GuideHeaderProps) {
   const [title, setTitle] = useState(guide.title)
   const [saving, setSaving] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
@@ -21,7 +22,7 @@ export default function GuideHeader({ guide, onUpdate }: GuideHeaderProps) {
 
   async function handleTitleBlur() {
     setIsFocused(false)
-    if (title === guide.title) return
+    if (isReadOnly || title === guide.title) return
     setSaving(true)
     await onUpdate({ title })
     setSaving(false)
@@ -31,10 +32,11 @@ export default function GuideHeader({ guide, onUpdate }: GuideHeaderProps) {
     <div className="flex items-center gap-2">
       <input
         value={displayTitle}
-        onChange={(e) => setTitle(e.target.value)}
-        onFocus={() => setIsFocused(true)}
+        onChange={(e) => { if (!isReadOnly) setTitle(e.target.value) }}
+        onFocus={() => { if (!isReadOnly) setIsFocused(true) }}
         onBlur={handleTitleBlur}
-        className="flex-1 min-w-0 font-heading font-semibold text-2xl text-text-primary bg-transparent border-none outline-none focus:ring-0 placeholder:text-text-muted"
+        readOnly={isReadOnly}
+        className={`flex-1 min-w-0 font-heading font-semibold text-2xl text-text-primary bg-transparent border-none outline-none focus:ring-0 placeholder:text-text-muted${isReadOnly ? ' cursor-default select-none' : ''}`}
         placeholder="Guide title..."
       />
       {saving && <span className="text-xs text-text-muted">Saving…</span>}

@@ -23,9 +23,10 @@ interface StepListProps {
   onUpdate: (stepId: string, updates: Partial<Step>) => Promise<void>
   onDelete: (stepId: string) => Promise<void>
   onReorder: (reordered: Step[]) => Promise<void>
+  isReadOnly?: boolean
 }
 
-export default function StepList({ steps, onUpdate, onDelete, onReorder }: StepListProps) {
+export default function StepList({ steps, onUpdate, onDelete, onReorder, isReadOnly = false }: StepListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -36,6 +37,7 @@ export default function StepList({ steps, onUpdate, onDelete, onReorder }: StepL
   )
 
   function handleDragEnd(event: DragEndEvent) {
+    if (isReadOnly) return
     const { active, over } = event
     if (!over || active.id === over.id) return
 
@@ -65,6 +67,7 @@ export default function StepList({ steps, onUpdate, onDelete, onReorder }: StepL
               stepNumber={index + 1}
               onUpdate={onUpdate}
               onDelete={onDelete}
+              isReadOnly={isReadOnly}
             />
           ))}
         </div>
