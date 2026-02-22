@@ -1,7 +1,7 @@
 // Quiqlog Background Service Worker
 // Handles: recording state, screenshot capture, annotation, session upload
 
-const APP_URL = 'https://quiqlog-lbev35daa-artashesvardanyan-9805s-projects.vercel.app'
+const APP_URL = 'https://quiqlog-buo1uzq3j-artashesvardanyan-9805s-projects.vercel.app'
 
 // ─── In-memory state (avoids read/write race conditions) ─────────────────────
 let recording = false
