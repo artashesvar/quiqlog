@@ -21,7 +21,7 @@ export function Card({
         hoverable &&
           'cursor-pointer hover:border-accent/40 hover:shadow-card-hover hover:-translate-y-1',
         glow && 'shadow-glow',
-        animate && 'opacity-0 animate-card-enter',
+        animate && 'animate-card-enter',
         className,
       ]
         .filter(Boolean)

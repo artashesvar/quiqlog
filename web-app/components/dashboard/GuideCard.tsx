@@ -35,12 +35,12 @@ export default function GuideCard({ guide }: GuideCardProps) {
   }
 
   return (
-    <Card hoverable animate className="p-4 flex flex-col gap-3">
+    <Card hoverable animate className="p-4 flex flex-col gap-3 h-full">
       {/* Title + public badge */}
       <div className="flex items-start justify-between gap-2">
         <Link
           href={`/dashboard/guides/${guide.id}/editor`}
-          className="font-heading font-semibold text-base text-text-primary hover:text-accent transition-colors line-clamp-2"
+          className="font-heading font-semibold text-base text-text-primary hover:text-accent transition-colors line-clamp-2 min-h-[3rem]"
         >
           {guide.title}
         </Link>

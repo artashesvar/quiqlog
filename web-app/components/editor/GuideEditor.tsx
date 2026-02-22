@@ -1,11 +1,16 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { Toaster } from 'react-hot-toast'
 import GuideHeader from './GuideHeader'
 import StepList from './StepList'
 import PaywallOverlay from './PaywallOverlay'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
+import { copyToClipboard } from '@/lib/utils'
+import { APP_URL } from '@/lib/constants'
 import type { Guide, Step } from '@/lib/types'
 
 interface GuideEditorProps {
@@ -16,6 +21,9 @@ interface GuideEditorProps {
 export default function GuideEditor({ guide: initialGuide, isLocked = false }: GuideEditorProps) {
   const [guide, setGuide] = useState(initialGuide)
   const [steps, setSteps] = useState<Step[]>(initialGuide.steps ?? [])
+  const [copied, setCopied] = useState(false)
+
+  const shareUrl = `${APP_URL}/guide/${guide.slug}`
 
   const updateGuide = useCallback(async (updates: Partial<Guide>) => {
     const res = await fetch(`/api/guides/${guide.id}`, {
@@ -58,7 +66,6 @@ export default function GuideEditor({ guide: initialGuide, isLocked = false }: G
 
   const reorderSteps = useCallback(async (reordered: Step[]) => {
     setSteps(reordered)
-    // Persist new order
     await Promise.all(
       reordered.map((step, index) =>
         fetch(`/api/steps/${step.id}`, {
@@ -69,6 +76,12 @@ export default function GuideEditor({ guide: initialGuide, isLocked = false }: G
       )
     )
   }, [])
+
+  async function handleCopyLink() {
+    await copyToClipboard(shareUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
     <>
@@ -84,8 +97,48 @@ export default function GuideEditor({ guide: initialGuide, isLocked = false }: G
           },
         }}
       />
-      <div className="max-w-3xl mx-auto flex flex-col gap-6">
+      <div className="max-w-3xl mx-auto flex flex-col gap-6 relative">
+        {/* Left gutter: back link */}
+        <Link
+          href="/dashboard"
+          className="text-sm text-text-muted hover:text-text-secondary transition-colors whitespace-nowrap mb-2 lg:mb-0 lg:absolute lg:right-full lg:top-1 lg:mr-8"
+        >
+          ← Back to Dashboard
+        </Link>
+
         <GuideHeader guide={guide} onUpdate={updateGuide} />
+
+        {/* Badge — right-4 aligns its right edge with the step screenshot images (mx-4) */}
+        <div className="lg:absolute lg:right-4 lg:top-1">
+          <Badge variant={guide.is_public ? 'success' : 'default'}>
+            {guide.is_public ? 'Published' : 'Draft'}
+          </Badge>
+        </div>
+
+        {/* Right gutter: action buttons — fixed width so all buttons are the same size */}
+        <div className="flex flex-wrap items-center gap-2 -mt-4 lg:mt-0 lg:absolute lg:left-full lg:top-0 lg:ml-8 lg:flex-col lg:items-stretch lg:gap-2 lg:w-52">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="px-5 w-full"
+            onClick={() => updateGuide({ is_public: !guide.is_public })}
+          >
+            {guide.is_public ? 'Unpublish' : 'Publish'}
+          </Button>
+          {guide.is_public && (
+            <>
+              <Button variant="ghost" size="sm" className="px-5 w-full" onClick={handleCopyLink}>
+                {copied ? '✓ Copied' : 'Copy Share Link'}
+              </Button>
+              <a href={shareUrl} target="_blank" rel="noreferrer" className="w-full">
+                <Button variant="ghost" size="sm" className="px-5 w-full">
+                  View Public Guide ↗
+                </Button>
+              </a>
+            </>
+          )}
+        </div>
+
         <StepList
           steps={steps}
           onUpdate={updateStep}
