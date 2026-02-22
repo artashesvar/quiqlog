@@ -6,6 +6,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import BlurEditor from '@/components/editor/BlurEditor'
 import type { Step } from '@/lib/types'
 
 interface StepCardProps {
@@ -20,6 +21,7 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
   const [title, setTitle] = useState(step.title)
   const [description, setDescription] = useState(step.description)
   const [deleting, setDeleting] = useState(false)
+  const [blurEditorOpen, setBlurEditorOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const {
@@ -116,7 +118,7 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
 
         {/* Screenshot */}
         {step.screenshot_url && (
-          <div className="mx-4 mb-3 rounded-md overflow-hidden border border-border transition-shadow duration-300 hover:shadow-soft-lg">
+          <div className="group/img relative mx-4 mb-3 rounded-md overflow-hidden border border-border transition-shadow duration-300 hover:shadow-soft-lg">
             <Image
               src={step.screenshot_url}
               alt={`Step ${stepNumber} screenshot`}
@@ -125,7 +127,32 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
               className="w-full h-auto object-cover"
               unoptimized
             />
+            {!isReadOnly && (
+              <button
+                onClick={() => setBlurEditorOpen(true)}
+                className="absolute top-2 right-2 p-1.5 rounded-md bg-background/80 backdrop-blur-sm border border-border text-text-muted hover:text-text-primary hover:bg-background-secondary transition-all opacity-0 group-hover/img:opacity-100"
+                title="Blur sensitive areas"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="8" cy="8" r="3" />
+                  <circle cx="8" cy="8" r="6" opacity="0.5" />
+                  <circle cx="8" cy="8" r="1" fill="currentColor" stroke="none" />
+                </svg>
+              </button>
+            )}
           </div>
+        )}
+        {blurEditorOpen && step.screenshot_url && (
+          <BlurEditor
+            imageUrl={step.screenshot_url}
+            guideId={step.guide_id}
+            stepId={step.id}
+            onSave={async (newUrl) => {
+              await onUpdate(step.id, { screenshot_url: newUrl })
+              setBlurEditorOpen(false)
+            }}
+            onClose={() => setBlurEditorOpen(false)}
+          />
         )}
 
         {/* Description */}

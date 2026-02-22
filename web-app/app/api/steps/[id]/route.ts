@@ -17,6 +17,7 @@ export async function PATCH(
   if (typeof body.title === 'string') updates.title = body.title
   if (typeof body.description === 'string') updates.description = body.description
   if (typeof body.order_index === 'number') updates.order_index = body.order_index
+  if (typeof body.screenshot_url === 'string') updates.screenshot_url = body.screenshot_url
 
   const { data, error } = await supabase
     .from('steps')
