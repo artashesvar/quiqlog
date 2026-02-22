@@ -54,7 +54,7 @@ export default function BlurEditor({ imageUrl, guideId, stepId, onSave, onClose 
 
     const allRects = extraRect ? [...regions, extraRect] : regions
 
-    // Apply blur to each region
+    // Apply blur to each region with color overlay
     for (const r of allRects) {
       ctx.save()
       ctx.beginPath()
@@ -62,6 +62,9 @@ export default function BlurEditor({ imageUrl, guideId, stepId, onSave, onClose 
       ctx.clip()
       ctx.filter = 'blur(20px)'
       ctx.drawImage(img, 0, 0)
+      ctx.filter = 'none'
+      ctx.fillStyle = 'rgba(224, 231, 255, 0.45)'
+      ctx.fillRect(r.x, r.y, r.w, r.h)
       ctx.restore()
     }
 
@@ -69,7 +72,7 @@ export default function BlurEditor({ imageUrl, guideId, stepId, onSave, onClose 
     if (showOutlines) {
       for (const r of allRects) {
         ctx.save()
-        ctx.strokeStyle = '#6366F1'
+        ctx.strokeStyle = '#E0E7FF'
         ctx.lineWidth = 2
         ctx.setLineDash([6, 3])
         ctx.strokeRect(r.x, r.y, r.w, r.h)

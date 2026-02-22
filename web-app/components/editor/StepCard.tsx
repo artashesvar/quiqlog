@@ -7,6 +7,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import BlurEditor from '@/components/editor/BlurEditor'
+import AnnotationEditor from '@/components/editor/AnnotationEditor'
 import type { Step } from '@/lib/types'
 
 interface StepCardProps {
@@ -22,6 +23,7 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
   const [description, setDescription] = useState(step.description)
   const [deleting, setDeleting] = useState(false)
   const [blurEditorOpen, setBlurEditorOpen] = useState(false)
+  const [annotationEditorOpen, setAnnotationEditorOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const {
@@ -128,19 +130,42 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
               unoptimized
             />
             {!isReadOnly && (
-              <button
-                onClick={() => setBlurEditorOpen(true)}
-                className="absolute top-2 right-2 p-1.5 rounded-md bg-background/80 backdrop-blur-sm border border-border text-text-muted hover:text-text-primary hover:bg-background-secondary transition-all opacity-0 group-hover/img:opacity-100"
-                title="Blur sensitive areas"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="8" cy="8" r="3" />
-                  <circle cx="8" cy="8" r="6" opacity="0.5" />
-                  <circle cx="8" cy="8" r="1" fill="currentColor" stroke="none" />
-                </svg>
-              </button>
+              <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover/img:opacity-100 transition-all">
+                <button
+                  onClick={() => setAnnotationEditorOpen(true)}
+                  className="p-1.5 rounded-md bg-[#6366F1] text-white hover:bg-[#4F46E5] transition-colors"
+                  title="Annotate screenshot"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setBlurEditorOpen(true)}
+                  className="p-1.5 rounded-md bg-[#6366F1] text-white hover:bg-[#4F46E5] transition-colors"
+                  title="Blur sensitive areas"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="8" cy="8" r="3" />
+                    <circle cx="8" cy="8" r="6" opacity="0.5" />
+                    <circle cx="8" cy="8" r="1" fill="currentColor" stroke="none" />
+                  </svg>
+                </button>
+              </div>
             )}
           </div>
+        )}
+        {annotationEditorOpen && step.screenshot_url && (
+          <AnnotationEditor
+            imageUrl={step.screenshot_url}
+            guideId={step.guide_id}
+            stepId={step.id}
+            onSave={async (newUrl) => {
+              await onUpdate(step.id, { screenshot_url: newUrl })
+              setAnnotationEditorOpen(false)
+            }}
+            onClose={() => setAnnotationEditorOpen(false)}
+          />
         )}
         {blurEditorOpen && step.screenshot_url && (
           <BlurEditor
