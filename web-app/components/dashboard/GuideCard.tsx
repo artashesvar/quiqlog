@@ -13,14 +13,14 @@ import type { Guide } from '@/lib/types'
 
 interface GuideCardProps {
   guide: Guide & { step_count: number }
+  onDelete: (id: string) => void
 }
 
-export default function GuideCard({ guide }: GuideCardProps) {
+export default function GuideCard({ guide, onDelete }: GuideCardProps) {
   const router = useRouter()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
-  const [deleted, setDeleted] = useState(false)
   const [unpublishing, setUnpublishing] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -35,7 +35,7 @@ export default function GuideCard({ guide }: GuideCardProps) {
       setDeleting(false)
       return
     }
-    setDeleted(true)
+    onDelete(guide.id)
     setShowDeleteDialog(false)
   }
 
@@ -54,8 +54,6 @@ export default function GuideCard({ guide }: GuideCardProps) {
     })
     router.push(`/dashboard/guides/${guide.id}/editor`)
   }
-
-  if (deleted) return null
 
   return (
     <>

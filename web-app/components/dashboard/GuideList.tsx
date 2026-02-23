@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import GuideCard from './GuideCard'
 import type { Guide } from '@/lib/types'
 
@@ -5,7 +8,13 @@ interface GuideListProps {
   guides: (Guide & { step_count: number })[]
 }
 
-export default function GuideList({ guides }: GuideListProps) {
+export default function GuideList({ guides: initialGuides }: GuideListProps) {
+  const [guides, setGuides] = useState(initialGuides)
+
+  function handleDelete(id: string) {
+    setGuides(prev => prev.filter(g => g.id !== id))
+  }
+
   if (guides.length === 0) {
     return (
       <div className="text-center py-20 rounded-lg border border-dashed border-border animate-fade-in">
@@ -24,7 +33,7 @@ export default function GuideList({ guides }: GuideListProps) {
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {guides.map((guide, i) => (
         <div key={guide.id} className={`stagger-${Math.min(i + 1, 9)}`}>
-          <GuideCard guide={guide} />
+          <GuideCard guide={guide} onDelete={handleDelete} />
         </div>
       ))}
     </div>
