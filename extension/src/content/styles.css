@@ -20,3 +20,8 @@
   margin: 0 !important;
   padding: 0 !important;
 }
+
+.__quiqlog_stop_btn__:hover {
+  background: #4F46E5 !important;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
+}

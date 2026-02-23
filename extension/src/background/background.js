@@ -18,26 +18,38 @@ chrome.storage.local.get(['recording', 'authToken'], (result) => {
 
 // ─── Screenshot + Annotation ─────────────────────────────────────────────────
 
-async function captureAndAnnotateTab(clickX, clickY) {
+async function captureAndAnnotateTab(clickX, clickY, dpr = 1) {
   // Enforce minimum interval between captures to stay under Chrome's rate limit
   const now = Date.now()
   const wait = MIN_CAPTURE_INTERVAL_MS - (now - lastCaptureTime)
   if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait))
   lastCaptureTime = Date.now()
 
+  // Hide the recording overlay before capturing so it doesn't appear in screenshots.
+  // The content script responds only after the next paint (double rAF), guaranteeing
+  // the overlay is invisible before captureVisibleTab runs.
+  if (targetTabId !== null) {
+    await chrome.tabs.sendMessage(targetTabId, { type: 'HIDE_OVERLAY' }).catch(() => {})
+  }
+
   try {
     const dataUrl = await chrome.tabs.captureVisibleTab(null, {
       format: 'png',
       quality: 90,
     })
-    return await annotateScreenshot(dataUrl, clickX, clickY)
+    return await annotateScreenshot(dataUrl, clickX, clickY, dpr)
   } catch (err) {
     console.error('[Quiqlog] Screenshot failed:', err)
     return null
+  } finally {
+    // Restore the overlay regardless of capture success/failure
+    if (targetTabId !== null) {
+      chrome.tabs.sendMessage(targetTabId, { type: 'SHOW_OVERLAY' }).catch(() => {})
+    }
   }
 }
 
-async function annotateScreenshot(dataUrl, x, y) {
+async function annotateScreenshot(dataUrl, x, y, dpr = 1) {
   const response = await fetch(dataUrl)
   const blob = await response.blob()
   const imageBitmap = await createImageBitmap(blob)
@@ -46,20 +58,26 @@ async function annotateScreenshot(dataUrl, x, y) {
   const ctx = canvas.getContext('2d')
   ctx.drawImage(imageBitmap, 0, 0)
 
-  const radius = 22
+  // Scale CSS pixel coordinates to device pixels so the annotation
+  // lands at the correct position on high-DPI screenshots.
+  const px = x * dpr
+  const py = y * dpr
+  const radius = 22 * dpr
+  const dotRadius = 5 * dpr
+
   ctx.beginPath()
-  ctx.arc(x, y, radius, 0, 2 * Math.PI)
+  ctx.arc(px, py, radius, 0, 2 * Math.PI)
   ctx.fillStyle = 'rgba(255, 220, 0, 0.35)'
   ctx.fill()
 
   ctx.beginPath()
-  ctx.arc(x, y, radius, 0, 2 * Math.PI)
+  ctx.arc(px, py, radius, 0, 2 * Math.PI)
   ctx.strokeStyle = '#FFD700'
-  ctx.lineWidth = 3
+  ctx.lineWidth = 3 * dpr
   ctx.stroke()
 
   ctx.beginPath()
-  ctx.arc(x, y, 5, 0, 2 * Math.PI)
+  ctx.arc(px, py, dotRadius, 0, 2 * Math.PI)
   ctx.fillStyle = '#FFD700'
   ctx.fill()
 
@@ -72,11 +90,13 @@ async function annotateScreenshot(dataUrl, x, y) {
 async function blobToBase64(blob) {
   const buffer = await blob.arrayBuffer()
   const bytes = new Uint8Array(buffer)
-  let binary = ''
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i])
+  // Build binary string in chunks to avoid O(n²) string concatenation
+  const CHUNK = 8192
+  const chunks = []
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    chunks.push(String.fromCharCode(...bytes.subarray(i, i + CHUNK)))
   }
-  return btoa(binary)
+  return btoa(chunks.join(''))
 }
 
 async function uploadScreenshot(blob) {
@@ -108,11 +128,11 @@ function enqueueClick(clickData) {
   clickQueue = clickQueue.then(() => processClick(clickData))
 }
 
-async function processClick({ x, y, label, url, pageTitle }) {
+async function processClick({ x, y, dpr, label, url, pageTitle }) {
   if (!recording) return
 
   try {
-    const screenshotBlob = await captureAndAnnotateTab(x, y)
+    const screenshotBlob = await captureAndAnnotateTab(x, y, dpr)
     let screenshotUrl = null
 
     if (screenshotBlob && authToken) {
@@ -176,16 +196,23 @@ async function startRecording(tabId = null) {
 
 async function stopRecording() {
   recording = false
-  targetTabId = null
   await chrome.storage.local.set({ recording: false })
   await chrome.action.setBadgeText({ text: '' })
 
   // Wait for any in-progress click processing to finish.
+  // targetTabId is still set so in-flight captures can hide/show the overlay.
   try {
     await clickQueue
   } catch (err) {
     console.warn('[Quiqlog] Click queue error on stop:', err)
   }
+
+  // Notify the content script directly so the overlay is removed immediately,
+  // rather than relying on the slower storage.onChanged fallback.
+  if (targetTabId !== null) {
+    chrome.tabs.sendMessage(targetTabId, { type: 'SET_RECORDING', value: false }).catch(() => {})
+  }
+  targetTabId = null
 
   if (steps.length === 0) {
     console.warn('[Quiqlog] No steps recorded.')
