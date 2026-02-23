@@ -161,6 +161,30 @@ async function processClick({ x, y, dpr, label, url, pageTitle }) {
   }
 }
 
+// ─── Content Script Injection ─────────────────────────────────────────────────
+// Content script is NOT declared in the manifest. We inject on-demand only when
+// recording starts, and re-inject when the user navigates within the recorded tab.
+
+async function injectContentScript(tabId) {
+  try {
+    await Promise.all([
+      chrome.scripting.executeScript({ target: { tabId }, files: ['src/content/content.js'] }),
+      chrome.scripting.insertCSS({ target: { tabId }, files: ['src/content/styles.css'] }),
+    ])
+  } catch (err) {
+    console.warn('[Quiqlog] Content script injection failed:', err)
+  }
+}
+
+// Re-inject content script when the recorded tab navigates to a new page.
+// The listener is added in startRecording and removed in stopRecording.
+function onTabUpdated(tabId, changeInfo) {
+  if (tabId === targetTabId && changeInfo.status === 'complete' && recording) {
+    console.log('[Quiqlog] Tab navigated — re-injecting content script')
+    injectContentScript(tabId)
+  }
+}
+
 // ─── Recording Control ────────────────────────────────────────────────────────
 
 async function startRecording(tabId = null) {
@@ -173,22 +197,9 @@ async function startRecording(tabId = null) {
   await chrome.action.setBadgeText({ text: '●' })
   await chrome.action.setBadgeBackgroundColor({ color: '#EF4444' })
 
-  // Directly notify the content script. If the message fails, the script is orphaned
-  // (extension was reloaded without the user refreshing the tab). Re-inject it so the
-  // user never has to manually refresh.
   if (tabId !== null) {
-    const delivered = await chrome.tabs.sendMessage(tabId, { type: 'SET_RECORDING', value: true })
-      .then(() => true)
-      .catch(() => false)
-
-    if (!delivered) {
-      console.log('[Quiqlog] Content script orphaned — re-injecting into tab', tabId)
-      await Promise.all([
-        chrome.scripting.executeScript({ target: { tabId }, files: ['src/content/content.js'] }),
-        chrome.scripting.insertCSS({ target: { tabId }, files: ['src/content/styles.css'] }),
-      ]).catch((err) => console.warn('[Quiqlog] Re-injection failed:', err))
-      await chrome.tabs.sendMessage(tabId, { type: 'SET_RECORDING', value: true }).catch(() => {})
-    }
+    await injectContentScript(tabId)
+    chrome.tabs.onUpdated.addListener(onTabUpdated)
   }
 
   console.log('[Quiqlog] Recording started', targetTabId ? `(tab ${targetTabId})` : '(all tabs)')
@@ -196,6 +207,7 @@ async function startRecording(tabId = null) {
 
 async function stopRecording() {
   recording = false
+  chrome.tabs.onUpdated.removeListener(onTabUpdated)
   await chrome.storage.local.set({ recording: false })
   await chrome.action.setBadgeText({ text: '' })
 
