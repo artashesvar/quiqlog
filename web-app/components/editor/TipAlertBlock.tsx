@@ -10,7 +10,7 @@ import type { Step } from '@/lib/types'
 interface TipAlertBlockProps {
   block: Step
   onUpdate: (id: string, updates: Partial<Step>) => Promise<void>
-  onDelete: (id: string) => Promise<void>
+  onDelete: (id: string) => Promise<boolean>
   isReadOnly?: boolean
 }
 

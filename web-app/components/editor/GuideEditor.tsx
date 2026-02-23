@@ -3,7 +3,6 @@
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { Toaster } from 'react-hot-toast'
 import GuideHeader from './GuideHeader'
 import StepList from './StepList'
 import PaywallOverlay from './PaywallOverlay'
@@ -54,14 +53,12 @@ export default function GuideEditor({ guide: initialGuide, isLocked = false }: G
     setSteps((prev) => prev.map((s) => (s.id === stepId ? { ...s, ...updated } : s)))
   }, [])
 
-  const deleteStep = useCallback(async (stepId: string) => {
+  const deleteStep = useCallback(async (stepId: string): Promise<boolean> => {
     const res = await fetch(`/api/steps/${stepId}`, { method: 'DELETE' })
-    if (!res.ok) {
-      toast.error('Failed to delete step')
-      return
-    }
+    if (!res.ok) return false
     setSteps((prev) => prev.filter((s) => s.id !== stepId))
     toast.success('Step deleted')
+    return true
   }, [])
 
   const reorderSteps = useCallback(async (reordered: Step[]) => {
@@ -115,17 +112,7 @@ export default function GuideEditor({ guide: initialGuide, isLocked = false }: G
   return (
     <>
       {isLocked && <PaywallOverlay />}
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          style: {
-            background: '#161B27',
-            color: '#F8FAFC',
-            border: '1px solid #2A3147',
-            borderRadius: '10px',
-          },
-        }}
-      />
+
       <div className="max-w-3xl mx-auto flex flex-col gap-6 relative">
         {/* Left gutter: back link */}
         <Link

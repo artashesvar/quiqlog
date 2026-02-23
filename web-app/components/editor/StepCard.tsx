@@ -6,6 +6,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { Dialog } from '@/components/ui/Dialog'
 import BlurEditor from '@/components/editor/BlurEditor'
 import AnnotationEditor from '@/components/editor/AnnotationEditor'
 import type { Step } from '@/lib/types'
@@ -14,7 +15,7 @@ interface StepCardProps {
   step: Step
   stepNumber: number
   onUpdate: (stepId: string, updates: Partial<Step>) => Promise<void>
-  onDelete: (stepId: string) => Promise<void>
+  onDelete: (stepId: string) => Promise<boolean>
   isReadOnly?: boolean
 }
 
@@ -22,6 +23,8 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
   const [title, setTitle] = useState(step.title)
   const [description, setDescription] = useState(step.description)
   const [deleting, setDeleting] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [blurEditorOpen, setBlurEditorOpen] = useState(false)
   const [annotationEditorOpen, setAnnotationEditorOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -57,10 +60,26 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
     if (description !== step.description) await onUpdate(step.id, { description })
   }
 
-  async function handleDelete() {
-    if (!confirm('Delete this step?')) return
+  function handleDelete() {
+    setConfirmOpen(true)
+  }
+
+  function handleClose() {
+    if (deleting) return
+    setConfirmOpen(false)
+    setDeleteError(null)
+  }
+
+  async function handleConfirmDelete() {
     setDeleting(true)
-    await onDelete(step.id)
+    setDeleteError(null)
+    const ok = await onDelete(step.id)
+    if (!ok) {
+      setDeleting(false)
+      setDeleteError('Failed to delete step. Please try again.')
+      return
+    }
+    setConfirmOpen(false)
   }
 
   return (
@@ -196,6 +215,28 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
           </div>
         )}
       </Card>
+
+      <Dialog open={confirmOpen} onClose={handleClose}>
+        <h2 className="font-heading font-semibold text-lg text-text-primary mb-2">
+          Delete Step?
+        </h2>
+        <p className="text-sm text-text-secondary mb-4">
+          <strong className="text-text-primary font-semibold">Step {stepNumber}</strong>{' '}
+          will be permanently deleted along with its screenshot and description.
+          This cannot be undone.
+        </p>
+        {deleteError && (
+          <p className="text-sm text-error mb-4">{deleteError}</p>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" size="sm" onClick={handleClose} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button variant="danger" size="sm" onClick={handleConfirmDelete} loading={deleting}>
+            Delete
+          </Button>
+        </div>
+      </Dialog>
     </div>
   )
 }

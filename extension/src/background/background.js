@@ -11,7 +11,9 @@ let targetTabId = null // tab the user selected to record; null = record all tab
 let sessionId = null   // unique ID per recording session, used in upload path
 
 // Load persisted state on startup.
-chrome.storage.local.get(['recording', 'authToken'], (result) => {
+// Stored as a promise so startRecording can await it to avoid race conditions
+// when the service worker restarts and a message arrives before storage is read.
+const stateReady = chrome.storage.local.get(['recording', 'authToken']).then(result => {
   recording = result.recording ?? false
   authToken = result.authToken ?? null
 })
@@ -188,6 +190,7 @@ function onTabUpdated(tabId, changeInfo) {
 // ─── Recording Control ────────────────────────────────────────────────────────
 
 async function startRecording(tabId = null) {
+  await stateReady // ensure authToken is loaded from storage before recording
   recording = true
   steps = []
   sessionId = crypto.randomUUID()

@@ -24,7 +24,7 @@ import type { Step } from '@/lib/types'
 interface StepListProps {
   steps: Step[]
   onUpdate: (stepId: string, updates: Partial<Step>) => Promise<void>
-  onDelete: (stepId: string) => Promise<void>
+  onDelete: (stepId: string) => Promise<boolean>
   onReorder: (reordered: Step[]) => Promise<void>
   onInsert: (afterIndex: number, type: 'tip' | 'alert') => Promise<void>
   isReadOnly?: boolean
