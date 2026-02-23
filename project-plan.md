@@ -180,6 +180,10 @@ myawsomeapp/
 - [ ] Handle token refresh (Supabase tokens expire after 1 hour — re-sync on dashboard visit already handles this)
 - [ ] Add loading skeletons to editor and dashboard
 - [ ] Drag-and-drop step reordering test (already built, verify it works)
+- [x] **Tip/Alert insert buttons visible in editing mode** — `InsertBlockMenu` `+` button was opacity-0 (hover-only, invisible); changed to opacity-40 at rest so users can discover the feature
+- [x] **Extension: persist steps across service worker restarts** — load/save `steps[]` in `chrome.storage.local` so in-progress recordings survive background script restarts
+- [x] **Extension: auth guard on screenshot upload** — `uploadScreenshot` now throws early if `authToken` is null, preventing unauthenticated upload attempts
+- [x] **Extension: security fix for GET_STATE** — `GET_STATE` handler now rejects messages from content scripts (`sender.tab` check), preventing web pages from reading `authToken`
 
 ### Phase 12 — Production Deploy
 - [ ] Deploy web app to Vercel (connect GitHub repo, set env vars)

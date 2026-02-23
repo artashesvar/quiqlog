@@ -13,9 +13,10 @@ let sessionId = null   // unique ID per recording session, used in upload path
 // Load persisted state on startup.
 // Stored as a promise so startRecording can await it to avoid race conditions
 // when the service worker restarts and a message arrives before storage is read.
-const stateReady = chrome.storage.local.get(['recording', 'authToken']).then(result => {
+const stateReady = chrome.storage.local.get(['recording', 'authToken', 'steps']).then(result => {
   recording = result.recording ?? false
   authToken = result.authToken ?? null
+  steps = result.steps ?? []
 })
 
 // ─── Screenshot + Annotation ─────────────────────────────────────────────────
@@ -102,6 +103,7 @@ async function blobToBase64(blob) {
 }
 
 async function uploadScreenshot(blob) {
+  if (!authToken) throw new Error('No auth token — skipping upload')
   const base64 = await blobToBase64(blob)
 
   const response = await fetch(`${APP_URL}/api/extension/upload`, {
@@ -155,7 +157,7 @@ async function processClick({ x, y, dpr, label, url, pageTitle }) {
     // Store only metadata + URL (no base64 blob in memory)
     steps.push({ x, y, label, url, pageTitle, screenshotUrl })
 
-    await chrome.storage.local.set({ stepCount: steps.length })
+    await chrome.storage.local.set({ steps, stepCount: steps.length })
     chrome.runtime.sendMessage({ type: 'STEP_COUNT', count: steps.length }).catch(() => {})
     console.log(`[Quiqlog] Step ${steps.length} recorded: "${label}" (screenshot: ${screenshotUrl ? 'yes' : 'no'})`)
   } catch (err) {
@@ -196,7 +198,7 @@ async function startRecording(tabId = null) {
   sessionId = crypto.randomUUID()
   targetTabId = tabId
   clickQueue = Promise.resolve() // reset queue in case it was left in a rejected state
-  await chrome.storage.local.set({ recording: true, stepCount: 0 })
+  await chrome.storage.local.set({ recording: true, steps: [], stepCount: 0 })
   await chrome.action.setBadgeText({ text: '●' })
   await chrome.action.setBadgeBackgroundColor({ color: '#EF4444' })
 
@@ -262,7 +264,7 @@ async function stopRecording() {
     await chrome.tabs.create({ url: `${APP_URL}/dashboard/guides/${guideId}/editor` })
     steps = []
     sessionId = null
-    await chrome.storage.local.set({ stepCount: 0 })
+    await chrome.storage.local.set({ steps: [], stepCount: 0 })
   } catch (err) {
     console.error('[Quiqlog] Failed to submit session:', err)
     await chrome.tabs.create({ url: `${APP_URL}/dashboard` })
@@ -315,6 +317,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (type === 'GET_STATE') {
+    // Only respond to messages from the extension itself (popup/background),
+    // not from content scripts on web pages, to avoid leaking authToken.
+    if (sender.tab) {
+      sendResponse({ error: 'unauthorized' })
+      return false
+    }
     sendResponse({ recording, steps, authToken })
     return false
   }

@@ -33,11 +33,11 @@ export default function InsertBlockMenu({ afterIndex, onInsert, isReadOnly = fal
   return (
     <div ref={ref} className="relative flex items-center justify-center my-1 group/insert">
       {/* Divider line */}
-      <div className="absolute inset-x-0 top-1/2 h-px bg-border opacity-0 group-hover/insert:opacity-100 transition-opacity" />
+      <div className="absolute inset-x-0 top-1/2 h-px bg-border opacity-30 group-hover/insert:opacity-100 transition-opacity" />
 
       <button
         onClick={() => setOpen((v) => !v)}
-        className="relative z-10 w-6 h-6 rounded-full bg-surface border border-border text-text-muted hover:text-accent hover:border-accent flex items-center justify-center text-sm font-medium transition-all opacity-0 group-hover/insert:opacity-100 focus:opacity-100"
+        className="relative z-10 w-6 h-6 rounded-full bg-surface border border-border text-text-muted hover:text-accent hover:border-accent flex items-center justify-center text-sm font-medium transition-all opacity-40 group-hover/insert:opacity-100 focus:opacity-100"
         title="Insert a block"
         aria-label="Insert a block"
       >
