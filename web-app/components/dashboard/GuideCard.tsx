@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { Dialog } from '@/components/ui/Dialog'
 import { formatRelativeDate, copyToClipboard } from '@/lib/utils'
 import { APP_URL } from '@/lib/constants'
 import type { Guide } from '@/lib/types'
@@ -16,16 +17,26 @@ interface GuideCardProps {
 
 export default function GuideCard({ guide }: GuideCardProps) {
   const router = useRouter()
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleted, setDeleted] = useState(false)
+  const [unpublishing, setUnpublishing] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const shareUrl = `${APP_URL}/guide/${guide.slug}`
 
   async function handleDelete() {
-    if (!confirm('Delete this guide? This cannot be undone.')) return
     setDeleting(true)
-    await fetch(`/api/guides/${guide.id}`, { method: 'DELETE' })
-    router.refresh()
+    setDeleteError(null)
+    const res = await fetch(`/api/guides/${guide.id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      setDeleteError('Something went wrong. Please try again.')
+      setDeleting(false)
+      return
+    }
+    setDeleted(true)
+    setShowDeleteDialog(false)
   }
 
   async function handleCopyLink() {
@@ -34,57 +45,124 @@ export default function GuideCard({ guide }: GuideCardProps) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  async function handleUnpublish() {
+    setUnpublishing(true)
+    await fetch(`/api/guides/${guide.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_public: false }),
+    })
+    router.push(`/dashboard/guides/${guide.id}/editor`)
+  }
+
+  if (deleted) return null
+
   return (
-    <Card hoverable animate className="p-4 flex flex-col gap-3 h-full">
-      {/* Title + public badge */}
-      <div className="flex items-start justify-between gap-2">
-        <Link
-          href={`/dashboard/guides/${guide.id}/editor`}
-          className="font-heading font-semibold text-base text-text-primary hover:text-accent transition-colors line-clamp-2 min-h-[3rem]"
-        >
-          {guide.title}
-        </Link>
-        <Badge variant={guide.is_public ? 'success' : 'default'} className="flex-shrink-0">
-          {guide.is_public ? 'Public' : 'Draft'}
-        </Badge>
-      </div>
+    <>
+      <Card hoverable animate className="p-4 flex flex-col gap-3 h-full">
+        {/* Title + public badge */}
+        <div className="flex items-start justify-between gap-2">
+          <Link
+            href={`/dashboard/guides/${guide.id}/editor`}
+            className="font-heading font-semibold text-base text-text-primary hover:text-accent transition-colors line-clamp-2 min-h-[3rem]"
+          >
+            {guide.title}
+          </Link>
+          <Badge variant={guide.is_public ? 'success' : 'default'} className="flex-shrink-0">
+            {guide.is_public ? 'Published' : 'Draft'}
+          </Badge>
+        </div>
 
-      {/* Meta */}
-      <div className="flex items-center gap-3 text-xs text-text-muted">
-        <span>{guide.step_count} step{guide.step_count !== 1 ? 's' : ''}</span>
-        <span>·</span>
-        <span>{formatRelativeDate(guide.created_at)}</span>
-      </div>
+        {/* Meta */}
+        <div className="flex items-center gap-3 text-xs text-text-muted">
+          <span>{guide.step_count} step{guide.step_count !== 1 ? 's' : ''}</span>
+          <span>·</span>
+          <span>{formatRelativeDate(guide.created_at)}</span>
+        </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-2 pt-1 border-t border-border">
-        <Link href={`/dashboard/guides/${guide.id}/editor`} className="flex-1">
-          <Button variant="ghost" size="sm" className="w-full text-xs">
-            Edit
+        {/* Actions */}
+        <div className="flex items-center gap-2 pt-1 border-t border-border">
+          {guide.is_public ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={handleCopyLink}
+              >
+                {copied ? '✓ Copied' : 'Copy Link'}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs"
+                onClick={handleUnpublish}
+                loading={unpublishing}
+              >
+                Unpublish
+              </Button>
+            </>
+          ) : (
+            <Link href={`/dashboard/guides/${guide.id}/editor`} className="flex-1">
+              <Button variant="ghost" size="sm" className="w-full text-xs">
+                Edit
+              </Button>
+            </Link>
+          )}
+
+          <Button
+            variant="danger"
+            size="sm"
+            className="text-xs"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            Delete
           </Button>
-        </Link>
+        </div>
+      </Card>
 
-        {guide.is_public && (
+      <Dialog
+        open={showDeleteDialog}
+        onClose={() => {
+          if (!deleting) {
+            setShowDeleteDialog(false)
+            setDeleteError(null)
+          }
+        }}
+      >
+        <h2 className="font-heading font-semibold text-lg text-text-primary mb-2">
+          Delete Guide?
+        </h2>
+        <p className="text-sm text-text-muted mb-5">
+          This guide will be permanently deleted and any shared links will stop working. This action cannot be undone.
+        </p>
+
+        {deleteError && (
+          <p className="text-sm text-error mb-4">{deleteError}</p>
+        )}
+
+        <div className="flex gap-2 justify-end">
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs"
-            onClick={handleCopyLink}
+            onClick={() => {
+              setShowDeleteDialog(false)
+              setDeleteError(null)
+            }}
+            disabled={deleting}
           >
-            {copied ? '✓ Copied' : 'Copy Link'}
+            Cancel
           </Button>
-        )}
-
-        <Button
-          variant="danger"
-          size="sm"
-          className="text-xs"
-          onClick={handleDelete}
-          loading={deleting}
-        >
-          Delete
-        </Button>
-      </div>
-    </Card>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={handleDelete}
+            loading={deleting}
+          >
+            Delete
+          </Button>
+        </div>
+      </Dialog>
+    </>
   )
 }

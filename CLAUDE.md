@@ -62,7 +62,15 @@ POLAR_SERVER=sandbox   # or "production"
 
 **Auth flow:** Supabase Auth → OAuth callback at `/api/auth/callback` → middleware protects `(app)` routes → `TokenSync` component pushes the Supabase access token into `chrome.storage.local` so the extension can make authenticated API calls.
 
+**Dashboard guide cards (`GuideCard`):** Published guides show a "Published" badge (green) with **Copy Link** and **Unpublish** action buttons. Draft guides show a "Draft" badge with an **Edit** button. Clicking **Unpublish** PATCHes `is_public: false` then redirects to the editor. The **Delete** button opens a `Dialog` confirmation modal; on success the card is removed instantly via local `deleted` state (no page refresh); on API failure the modal stays open and shows an inline error.
+
 **Editor read-only mode:** When a guide is published (`is_public = true`), the editor becomes read-only. `GuideEditor` derives `isReadOnly = guide.is_public` from reactive state and passes it down to `GuideHeader` (title input), `StepList` (DnD reordering blocked in `handleDragEnd`), and `StepCard` (step title input, description textarea, drag handle, and delete button are all disabled/hidden). The Publish/Unpublish button remains interactive at all times.
+
+**Screenshot editing tools (editing mode only):** Each step screenshot shows a hover-revealed vertical toolbar (top-right, indigo `#6366F1` buttons) with two tools:
+- **Annotation** (`BlurEditor.tsx`) — pencil icon; opens a canvas modal where the user draws rectangles over sensitive areas, applies `blur(20px)` + `#E0E7FF` overlay, then re-uploads the merged PNG via `/api/upload` and updates `screenshot_url` via PATCH `/api/steps/[id]`.
+- **Freeform drawing** (`AnnotationEditor.tsx`) — pencil icon; canvas modal with 8 color swatches, thin/medium/thick stroke width picker, Undo (last stroke), Clear All, and Save Annotation. Uses `useRef` for in-progress stroke points (performance — no re-renders during `pointermove`), commits to React state on `pointerup`. Merged permanently into screenshot on save, same upload flow as blur.
+- Both tools use `crossOrigin = "anonymous"` to load Supabase signed URLs into canvas without tainting it.
+- The PATCH `/api/steps/[id]` route accepts `screenshot_url` updates (in addition to `title`, `description`, `order_index`).
 
 ### Extension (Chrome MV3, vanilla JS)
 
@@ -83,6 +91,20 @@ Dark theme with indigo accents. Key tokens:
 - Accent: `#6366F1` (indigo)
 - Fonts: Space Grotesk (headings), Work Sans (body)
 - Defined in `tailwind.config.ts` and `globals.css`
+
+### UI Components (`web-app/components/ui/`)
+
+All components are unstyled primitives that compose Tailwind tokens from the design system above.
+
+**`Button`** — `variant`: `primary` | `secondary` | `ghost` | `danger`. `size`: `sm` | `md` | `lg`. `loading?: boolean` shows a spinner and disables the button. Extends `ButtonHTMLAttributes`.
+
+**`Badge`** — `variant`: `default` | `success` | `warning` | `error` | `accent`. Extends `HTMLAttributes<HTMLSpanElement>`.
+
+**`Card`** — `hoverable?: boolean` adds lift + accent border on hover. `glow?: boolean` adds indigo shadow. `animate?: boolean` plays the `animate-card-enter` entrance animation. Extends `HTMLAttributes<HTMLDivElement>`.
+
+**`Input`** — `label?: string` renders an accessible `<label>`. `error?: string` shows red border + error text below. `hint?: string` shows muted helper text (hidden when `error` is set). Auto-generates `id` from label if not provided. Extends `InputHTMLAttributes`.
+
+**`Dialog`** — Client component. `open: boolean` controls visibility. `onClose: () => void` is called on Escape key or backdrop click. Renders via `createPortal` into `document.body` at `z-50`. Use for confirmation modals and overlays; lay out title, body, and action buttons as `children`.
 
 ## CORS
 

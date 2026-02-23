@@ -1,38 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { EXTENSION_ID, CHROME_WEB_STORE_URL } from '@/lib/constants'
+import { useExtensionInstalled } from '@/lib/hooks/useExtensionInstalled'
+import { CHROME_WEB_STORE_URL } from '@/lib/constants'
 import { Button } from '@/components/ui/Button'
 
 export default function ExtensionCTA() {
-  const [extensionInstalled, setExtensionInstalled] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    // Check if extension is installed via chrome.runtime.sendMessage
-    if (typeof window === 'undefined') return
-
-    const win = window as any
-    if (!win.chrome?.runtime?.sendMessage) {
-      setExtensionInstalled(false)
-      return
-    }
-
-    try {
-      win.chrome.runtime.sendMessage(
-        EXTENSION_ID,
-        { type: 'PING' },
-        (response: any) => {
-          if (win.chrome.runtime.lastError) {
-            setExtensionInstalled(false)
-          } else {
-            setExtensionInstalled(!!response?.alive)
-          }
-        }
-      )
-    } catch {
-      setExtensionInstalled(false)
-    }
-  }, [])
+  const extensionInstalled = useExtensionInstalled()
 
   // Don't render until we know
   if (extensionInstalled === null) return null
