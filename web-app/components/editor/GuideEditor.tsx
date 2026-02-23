@@ -77,6 +77,35 @@ export default function GuideEditor({ guide: initialGuide, isLocked = false }: G
     )
   }, [])
 
+  const insertBlock = useCallback(async (afterIndex: number, type: 'tip' | 'alert') => {
+    const res = await fetch(`/api/guides/${guide.id}/steps`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, title: '', description: '' }),
+    })
+    if (!res.ok) {
+      toast.error('Failed to insert block')
+      return
+    }
+    const newBlock: Step = await res.json()
+
+    setSteps((prev) => {
+      const insertAt = afterIndex + 1
+      const next = [...prev.slice(0, insertAt), newBlock, ...prev.slice(insertAt)]
+      // Re-index all items to reflect the new order
+      Promise.all(
+        next.map((step, index) =>
+          fetch(`/api/steps/${step.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_index: index }),
+          })
+        )
+      )
+      return next
+    })
+  }, [guide.id])
+
   async function handleCopyLink() {
     await copyToClipboard(shareUrl)
     setCopied(true)
@@ -144,6 +173,7 @@ export default function GuideEditor({ guide: initialGuide, isLocked = false }: G
           onUpdate={updateStep}
           onDelete={deleteStep}
           onReorder={reorderSteps}
+          onInsert={insertBlock}
           isReadOnly={guide.is_public}
         />
 

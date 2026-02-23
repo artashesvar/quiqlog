@@ -14,6 +14,7 @@ export interface Step {
   id: string
   guide_id: string
   order_index: number
+  type: 'step' | 'tip' | 'alert'
   title: string
   description: string
   screenshot_url: string | null

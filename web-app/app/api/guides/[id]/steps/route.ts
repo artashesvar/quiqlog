@@ -58,6 +58,7 @@ export async function POST(
     .insert({
       guide_id: id,
       order_index: body.order_index ?? nextIndex,
+      type: ['step', 'tip', 'alert'].includes(body.type) ? body.type : 'step',
       title: body.title ?? '',
       description: body.description ?? '',
       screenshot_url: body.screenshot_url ?? null,

@@ -26,9 +26,14 @@ export default function PublicGuideHeader({ guide }: PublicGuideHeaderProps) {
 
       {/* Meta */}
       <div className="flex items-center gap-3 flex-wrap">
-        <Badge variant="accent">
-          {guide.steps?.length ?? 0} step{(guide.steps?.length ?? 0) !== 1 ? 's' : ''}
-        </Badge>
+        {(() => {
+          const count = guide.steps?.filter((s) => s.type === 'step').length ?? 0
+          return (
+            <Badge variant="accent">
+              {count} step{count !== 1 ? 's' : ''}
+            </Badge>
+          )
+        })()}
         <span className="text-text-muted text-sm">
           Created {formatDate(guide.created_at)}
         </span>

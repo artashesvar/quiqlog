@@ -64,13 +64,15 @@ POLAR_SERVER=sandbox   # or "production"
 
 **Dashboard guide cards (`GuideCard`):** Published guides show a "Published" badge (green) with **Copy Link** and **Unpublish** action buttons. Draft guides show a "Draft" badge with an **Edit** button. Clicking **Unpublish** PATCHes `is_public: false` then redirects to the editor. The **Delete** button opens a `Dialog` confirmation modal; on success the card is removed instantly via local `deleted` state (no page refresh); on API failure the modal stays open and shows an inline error.
 
-**Editor read-only mode:** When a guide is published (`is_public = true`), the editor becomes read-only. `GuideEditor` derives `isReadOnly = guide.is_public` from reactive state and passes it down to `GuideHeader` (title input), `StepList` (DnD reordering blocked in `handleDragEnd`), and `StepCard` (step title input, description textarea, drag handle, and delete button are all disabled/hidden). The Publish/Unpublish button remains interactive at all times.
+**Editor read-only mode:** When a guide is published (`is_public = true`), the editor becomes read-only. `GuideEditor` derives `isReadOnly = guide.is_public` from reactive state and passes it down to `GuideHeader` (title input), `StepList` (DnD reordering blocked in `handleDragEnd`), and `StepCard` / `TipAlertBlock` (inputs, drag handle, and delete button are all disabled/hidden). The Publish/Unpublish button remains interactive at all times.
+
+**Tip & Alert blocks:** Between each item in the editor, an `InsertBlockMenu` component renders a hover-revealed `+` button. Clicking it opens a small dropdown with two options — **Tip** (blue, lightbulb icon) and **Alert** (amber, warning icon). Selecting one POSTs a new row to `/api/guides/[id]/steps` with `type: 'tip'|'alert'`, splices it into local state at the correct position, then re-indexes all `order_index` values. Blocks are rendered as `TipAlertBlock` cards — draggable via dnd-kit, with an optional editable title and an editable body textarea; saves happen on blur like `StepCard`. In the published guide, `PublicTipAlertBlock` renders them with a coloured left border (blue for tip, amber for alert) and a type label — clearly distinct from numbered steps. Step numbers in both the editor and the public viewer only increment for `type === 'step'` items; the step count badge in `PublicGuideHeader` likewise filters to real steps only. The `InsertBlockMenu` and all editing inputs/buttons inside `TipAlertBlock` are hidden in read-only mode.
 
 **Screenshot editing tools (editing mode only):** Each step screenshot shows a hover-revealed vertical toolbar (top-right, indigo `#6366F1` buttons) with two tools:
 - **Annotation** (`BlurEditor.tsx`) — pencil icon; opens a canvas modal where the user draws rectangles over sensitive areas, applies `blur(20px)` + `#E0E7FF` overlay, then re-uploads the merged PNG via `/api/upload` and updates `screenshot_url` via PATCH `/api/steps/[id]`.
 - **Freeform drawing** (`AnnotationEditor.tsx`) — pencil icon; canvas modal with 8 color swatches, thin/medium/thick stroke width picker, Undo (last stroke), Clear All, and Save Annotation. Uses `useRef` for in-progress stroke points (performance — no re-renders during `pointermove`), commits to React state on `pointerup`. Merged permanently into screenshot on save, same upload flow as blur.
 - Both tools use `crossOrigin = "anonymous"` to load Supabase signed URLs into canvas without tainting it.
-- The PATCH `/api/steps/[id]` route accepts `screenshot_url` updates (in addition to `title`, `description`, `order_index`).
+- The PATCH `/api/steps/[id]` route accepts `screenshot_url` updates (in addition to `title`, `description`, `order_index`, `type`).
 
 ### Extension (Chrome MV3, vanilla JS)
 
@@ -83,6 +85,8 @@ The extension communicates with the web app via `externally_connectable` in the 
 ### Database (Supabase/PostgreSQL)
 
 Three tables: `guides`, `steps`, `user_subscriptions`. Row-Level Security (RLS) is enabled — users can only access their own data; public guides are readable by all. Screenshots are stored in Supabase Storage with matching RLS policies.
+
+**`steps` table `type` column:** Each row has `type TEXT NOT NULL DEFAULT 'step' CHECK (type IN ('step', 'tip', 'alert'))`. Migration: `supabase/add-step-type.sql`. Existing rows default to `'step'`. Tip and Alert blocks reuse all the same CRUD API routes as steps — the `type` field is accepted on POST (`/api/guides/[id]/steps`) and PATCH (`/api/steps/[id]`). DELETE is unchanged; it safely skips storage cleanup when `screenshot_url` is null (as it always is for blocks).
 
 ## Design System
 
