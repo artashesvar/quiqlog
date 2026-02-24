@@ -265,7 +265,7 @@ async function stopRecording() {
     if (!response.ok) throw new Error(`API error: ${response.status}`)
 
     const { guideId } = await response.json()
-    await chrome.tabs.create({ url: `${APP_URL}/home/guides/${guideId}/editor` })
+    await chrome.tabs.create({ url: `${APP_URL}/dashboard/guides/${guideId}/editor` })
     steps = []
     sessionId = null
     await chrome.storage.local.set({ steps: [], stepCount: 0 })
