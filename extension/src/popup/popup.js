@@ -25,7 +25,7 @@ let selectedTab = null
 
 // Set links
 loginLink.href = APP_URL + '/login'
-dashboardLink.href = APP_URL + '/dashboard'
+dashboardLink.href = APP_URL + '/home'
 
 function updateUI(recording, stepCount = 0, hasToken = false) {
   isRecording = recording

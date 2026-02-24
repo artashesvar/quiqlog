@@ -204,6 +204,10 @@ async function startRecording(tabId = null) {
 
   if (tabId !== null) {
     await injectContentScript(tabId)
+    // In case the __quiqlog_injected__ guard blocked re-injection (tab was
+    // previously recorded and the content script is still loaded with
+    // isRecording=false), explicitly re-activate it.
+    chrome.tabs.sendMessage(tabId, { type: 'SET_RECORDING', value: true }).catch(() => {})
     chrome.tabs.onUpdated.addListener(onTabUpdated)
   }
 
@@ -261,13 +265,13 @@ async function stopRecording() {
     if (!response.ok) throw new Error(`API error: ${response.status}`)
 
     const { guideId } = await response.json()
-    await chrome.tabs.create({ url: `${APP_URL}/dashboard/guides/${guideId}/editor` })
+    await chrome.tabs.create({ url: `${APP_URL}/home/guides/${guideId}/editor` })
     steps = []
     sessionId = null
     await chrome.storage.local.set({ steps: [], stepCount: 0 })
   } catch (err) {
     console.error('[Quiqlog] Failed to submit session:', err)
-    await chrome.tabs.create({ url: `${APP_URL}/dashboard` })
+    await chrome.tabs.create({ url: `${APP_URL}/home` })
   }
 }
 
@@ -323,8 +327,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ error: 'unauthorized' })
       return false
     }
-    sendResponse({ recording, steps, authToken })
-    return false
+    // Await stateReady to avoid a race condition where the service worker
+    // wakes from sleep and GET_STATE arrives before storage has been read.
+    stateReady.then(() => sendResponse({ recording, steps, authToken }))
+    return true // keep message channel open for async response
   }
 
   return false
@@ -340,6 +346,11 @@ chrome.runtime.onMessageExternal.addListener((message, _sender, sendResponse) =>
   if (message.type === 'STORE_TOKEN') {
     authToken = message.token
     chrome.storage.local.set({ authToken: message.token }).then(() => sendResponse({ ok: true }))
+    return true
+  }
+  if (message.type === 'CLEAR_TOKEN') {
+    authToken = null
+    chrome.storage.local.set({ authToken: null }).then(() => sendResponse({ ok: true }))
     return true
   }
 })

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import AppNav from '@/components/AppNav'
+import SideNav from '@/components/SideNav'
 import { ToastProvider } from '@/components/ToastProvider'
 import TokenSync from '@/components/dashboard/TokenSync'
 
@@ -31,9 +32,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         isCanceled={isCanceled}
         subscriptionEnd={sub?.current_period_end ?? undefined}
       />
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
-        {children}
-      </main>
+      <div className="flex flex-1">
+        <SideNav />
+        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
+          {children}
+        </main>
+      </div>
       <ToastProvider />
       <TokenSync />
     </div>

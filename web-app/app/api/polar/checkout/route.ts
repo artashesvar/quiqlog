@@ -24,7 +24,7 @@ export async function POST() {
     },
     body: JSON.stringify({
       product_id: process.env.POLAR_PRODUCT_ID,
-      success_url: `${APP_URL}/dashboard?upgraded=true`,
+      success_url: `${APP_URL}/home?upgraded=true`,
       customer_email: user.email,
       metadata: {
         // Polar will forward this metadata in webhook events so we can

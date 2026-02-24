@@ -22,7 +22,7 @@ export default function NewGuideButton() {
       })
       const data = await res.json()
       if (data.id) {
-        router.push(`/dashboard/guides/${data.id}/editor`)
+        router.push(`/home/guides/${data.id}/editor`)
       }
     } finally {
       setLoading(false)

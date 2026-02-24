@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import GuideList from '@/components/dashboard/GuideList'
-import ExtensionCTA from '@/components/dashboard/ExtensionCTA'
 import NewGuideButton from '@/components/dashboard/NewGuideButton'
 
 export const metadata = { title: 'Dashboard' }
@@ -33,9 +32,6 @@ export default async function DashboardPage() {
         </div>
         <NewGuideButton />
       </div>
-
-      {/* Extension CTA (client component — checks for extension) */}
-      <ExtensionCTA />
 
       {/* Guide list */}
       <GuideList guides={formattedGuides} />
