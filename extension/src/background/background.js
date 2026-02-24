@@ -1,7 +1,7 @@
 // Quiqlog Background Service Worker
 // Handles: recording state, screenshot capture, annotation, session upload
 
-const APP_URL = 'http://localhost:3000'
+const APP_URL = 'https://app.quiqlog.com'
 
 // ─── In-memory state (avoids read/write race conditions) ─────────────────────
 let recording = false
