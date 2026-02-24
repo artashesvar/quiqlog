@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import GuideList from '@/components/dashboard/GuideList'
 import ExtensionCTA from '@/components/dashboard/ExtensionCTA'
 import NewGuideButton from '@/components/dashboard/NewGuideButton'
-import TokenSync from '@/components/dashboard/TokenSync'
 
 export const metadata = { title: 'Dashboard' }
 
@@ -34,9 +33,6 @@ export default async function DashboardPage() {
         </div>
         <NewGuideButton />
       </div>
-
-      {/* Syncs auth token to extension silently */}
-      <TokenSync />
 
       {/* Extension CTA (client component — checks for extension) */}
       <ExtensionCTA />

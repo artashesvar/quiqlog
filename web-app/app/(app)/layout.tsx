@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import AppNav from '@/components/AppNav'
 import { ToastProvider } from '@/components/ToastProvider'
+import TokenSync from '@/components/dashboard/TokenSync'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -34,6 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {children}
       </main>
       <ToastProvider />
+      <TokenSync />
     </div>
   )
 }

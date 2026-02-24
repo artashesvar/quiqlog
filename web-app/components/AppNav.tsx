@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { EXTENSION_ID } from '@/lib/constants'
 
 interface AppNavProps {
   userEmail?: string
@@ -22,6 +23,14 @@ export default function AppNav({ userEmail, hasSubscription, isPro, isCanceled, 
   async function signOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
+    const win = window as any
+    if (win.chrome?.runtime?.sendMessage) {
+      try {
+        win.chrome.runtime.sendMessage(EXTENSION_ID, { type: 'CLEAR_TOKEN' }, () => {
+          win.chrome.runtime.lastError
+        })
+      } catch {}
+    }
     router.push('/login')
     router.refresh()
   }

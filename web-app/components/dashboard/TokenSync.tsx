@@ -4,13 +4,13 @@ import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { EXTENSION_ID } from '@/lib/constants'
 
-function sendTokenToExtension(token: string) {
+function sendToExtension(message: object) {
   const win = window as any
   if (!win.chrome?.runtime?.sendMessage) return
   try {
     win.chrome.runtime.sendMessage(
       EXTENSION_ID,
-      { type: 'STORE_TOKEN', token },
+      message,
       () => { win.chrome.runtime.lastError /* suppress error */ }
     )
   } catch {}
@@ -19,9 +19,18 @@ function sendTokenToExtension(token: string) {
 export default function TokenSync() {
   useEffect(() => {
     const supabase = createClient()
+
+    // Send immediately on mount — onAuthStateChange may have already fired
+    // its INITIAL_SESSION event before this useEffect subscribed
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) sendToExtension({ type: 'STORE_TOKEN', token: session.access_token })
+    })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        sendTokenToExtension(session.access_token)
+        sendToExtension({ type: 'STORE_TOKEN', token: session.access_token })
+      } else {
+        sendToExtension({ type: 'CLEAR_TOKEN' })
       }
     })
 
