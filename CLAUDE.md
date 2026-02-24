@@ -43,9 +43,15 @@ POLAR_SERVER=sandbox   # or "production"
 
 **Route groups:**
 - `(auth)/` — Login/signup pages (unauthenticated)
-- `(app)/` — Protected routes (dashboard, guide editor); middleware enforces auth
+- `(app)/` — Protected routes (home, dashboard, guide editor); middleware enforces auth
 - `guide/[slug]/` — Public guide viewer (SEO-optimized, no auth required)
 - `api/` — Backend: guide/step CRUD, screenshot upload, extension session receiver, Polar webhooks
+
+**App routes:**
+- `/home` — Home page (ExtensionCTA + GuideStats)
+- `/dashboard` — Guide list (all user guides)
+- `/dashboard/guides/[id]/editor` — Guide editor
+- `/guides/[id]/editor` — Legacy route; redirects to `/dashboard/guides/[id]/editor`
 
 **Key library files (`web-app/lib/`):**
 - `types.ts` — Shared TypeScript interfaces (`Guide`, `Step`, `User`, `ExtensionSession`)

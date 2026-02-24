@@ -52,7 +52,7 @@ export default function GuideCard({ guide, onDelete }: GuideCardProps) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_public: false }),
     })
-    router.push(`/home/guides/${guide.id}/editor`)
+    router.push(`/dashboard/guides/${guide.id}/editor`)
   }
 
   return (
@@ -61,7 +61,7 @@ export default function GuideCard({ guide, onDelete }: GuideCardProps) {
         {/* Title + public badge */}
         <div className="flex items-start justify-between gap-2">
           <Link
-            href={`/home/guides/${guide.id}/editor`}
+            href={`/dashboard/guides/${guide.id}/editor`}
             className="font-heading font-semibold text-base text-text-primary hover:text-accent transition-colors line-clamp-2 min-h-[3rem]"
           >
             {guide.title}
@@ -101,7 +101,7 @@ export default function GuideCard({ guide, onDelete }: GuideCardProps) {
               </Button>
             </>
           ) : (
-            <Link href={`/home/guides/${guide.id}/editor`} className="flex-1">
+            <Link href={`/dashboard/guides/${guide.id}/editor`} className="flex-1">
               <Button variant="ghost" size="sm" className="w-full text-xs">
                 Edit
               </Button>
