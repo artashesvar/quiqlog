@@ -62,6 +62,8 @@ POLAR_SERVER=sandbox   # or "production"
 
 **Auth flow:** Supabase Auth → OAuth callback at `/api/auth/callback` → middleware protects `(app)` routes → `TokenSync` component pushes the Supabase access token into `chrome.storage.local` so the extension can make authenticated API calls.
 
+**Home page (`/home`):** Server component. Shows `ExtensionCTA` at the top, a flex spacer in the middle, and a `GuideStats` section (`components/dashboard/GuideStats.tsx`) anchored to the bottom. `GuideStats` displays 3 stat cards horizontally: **Guides in Draft** (`is_public = false`), **Guides Published** (`is_public = true`), and **Recorded in last 7 days** (`created_at >= now() - 7 days`). All 3 counts are fetched in parallel via `Promise.all` using Supabase's `{ count: 'exact', head: true }` — RLS automatically scopes them to the current user. Stats reflect the state at page load time (not real-time).
+
 **Dashboard guide cards (`GuideCard`):** Published guides show a "Published" badge (green) with **Copy Link** and **Unpublish** action buttons. Draft guides show a "Draft" badge with an **Edit** button. Clicking **Unpublish** PATCHes `is_public: false` then redirects to the editor. The **Delete** button opens a `Dialog` confirmation modal; on success the card is removed instantly — `GuideCard` calls an `onDelete(id)` callback, and `GuideList` (a client component) filters it out of its own state, removing the wrapper grid cell entirely (no empty space, no page refresh); on API failure the modal stays open and shows an inline error.
 
 **Editor read-only mode:** When a guide is published (`is_public = true`), the editor becomes read-only. `GuideEditor` derives `isReadOnly = guide.is_public` from reactive state and passes it down to `GuideHeader` (title input), `StepList` (DnD reordering blocked in `handleDragEnd`), and `StepCard` / `TipAlertBlock` (inputs, drag handle, and delete button are all disabled/hidden). The Publish/Unpublish button remains interactive at all times.
@@ -95,6 +97,10 @@ Dark theme with indigo accents. Key tokens:
 - Accent: `#6366F1` (indigo)
 - Fonts: Space Grotesk (headings), Work Sans (body)
 - Defined in `tailwind.config.ts` and `globals.css`
+
+**Custom tokens** (use these for UI chrome, layout, and text): `bg-background`, `bg-background-secondary`, `bg-background-tertiary`, `border-border`, `text-text-primary`, `text-text-secondary`, `text-text-muted`, `text-accent`, `bg-accent`, `text-success`, `text-warning`, `text-error`.
+
+**Standard Tailwind colors** are used for semantic/categorical color coding where a distinct hue is needed — e.g. stat card icons use `text-amber-400` (draft), `text-emerald-400` (published), `text-indigo-400` (recent). Tip blocks use `blue-*`, Alert blocks use `amber-*`.
 
 ### UI Components (`web-app/components/ui/`)
 

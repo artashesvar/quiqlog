@@ -35,6 +35,16 @@
       "error": "#EF4444",
       "usage": "Used for badges, status indicators, and inline validation messages. Each has a translucent bg variant at 10% opacity (e.g. bg-error/10) and border at 20% opacity."
     },
+    "categorical": {
+      "approach": "Standard Tailwind *-400 shades used for distinct hue-coded categories (not covered by custom tokens).",
+      "examples": {
+        "amber-400": "Draft/in-progress states (stat card icon)",
+        "emerald-400": "Published/live states (stat card icon)",
+        "indigo-400": "Recency/time-based indicators (stat card icon)",
+        "blue-*": "Tip blocks",
+        "amber-*": "Alert blocks"
+      }
+    },
     "selection": {
       "background": "rgba(99, 102, 241, 0.3)",
       "text": "#F8FAFC"
@@ -108,6 +118,10 @@
       "label": {
         "classes": "text-sm font-medium text-text-secondary",
         "usage": "Form input labels"
+      },
+      "stat-number": {
+        "classes": "text-2xl font-bold font-heading text-text-primary leading-none",
+        "usage": "Large numeric stat values (e.g. GuideStats cards)"
       }
     },
     "rendering": {
@@ -287,6 +301,14 @@
       "usage": "Banner prompting Chrome extension install"
     },
 
+    "GuideStats": {
+      "file": "web-app/components/dashboard/GuideStats.tsx",
+      "layout": "flex flex-col gap-4 — heading above, grid grid-cols-3 gap-4 for cards",
+      "card": "Card component with px-5 py-4, flex items-center gap-4 — lucide icon left, number + label right",
+      "iconColors": "text-amber-400 (drafts), text-emerald-400 (published), text-indigo-400 (recent)",
+      "usage": "Displayed at the bottom of the /home page. Receives pre-fetched counts as props (drafts, published, recentCount)."
+    },
+
     "EmptyState": {
       "classes": "text-center py-20 rounded-lg border border-dashed border-border animate-fade-in",
       "icon": "text-5xl mb-4 (emoji)",
@@ -360,7 +382,8 @@
       "fullWidth": "min-h-screen bg-background",
       "centeredAuth": "min-h-screen bg-background flex items-center justify-center p-4",
       "appShell": "min-h-screen bg-background flex flex-col",
-      "contentArea": "flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8"
+      "contentArea": "flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8",
+      "bottomAnchored": "flex flex-col min-h-full — place a flex-1 spacer div between top content and bottom content to push the bottom section to the foot of the viewport"
     },
 
     "gridLayouts": {
@@ -405,21 +428,32 @@
   },
 
   "icons": {
-    "approach": "Inline SVGs — no icon library used",
-    "style": {
-      "strokeBased": "fill='none' strokeWidth={1.5} stroke='currentColor' (Heroicons-style outline)",
-      "filledDots": "fill='currentColor' (drag handle dots)",
-      "sizing": "w-4 h-4 (small), w-6 h-6 (medium icons), w-2.5 h-2.5 (checkmarks inside circles)"
+    "approach": "Mix of inline SVGs and lucide-react. Use lucide-react for UI components (stat cards, nav, action buttons). Use inline SVGs for custom/branded shapes (drag handle dots, step number badges).",
+    "library": {
+      "name": "lucide-react",
+      "usage": "Preferred for standard UI icons. Pass size prop (e.g. size={20}) and className for color. Use currentColor via Tailwind text-* classes.",
+      "usedIcons": {
+        "FileText": "Guides in Draft stat card",
+        "Globe": "Guides Published stat card",
+        "CalendarDays": "Recorded in last 7 days stat card"
+      }
     },
-    "usedIcons": {
-      "spinner": "Circular loading spinner (SVG with animate-spin h-4 w-4)",
-      "dragHandle": "6-dot grip pattern (2x3 grid of circles, 16x16 viewBox)",
-      "trash": "Trash/delete icon (15x15 viewBox, filled path)",
-      "lock": "Padlock icon (24x24 viewBox, Heroicons-style stroke)",
-      "checkmark": "Check/tick mark (24x24 viewBox, strokeWidth 3)",
-      "emojis": "Used as decorative icons: 🧩 (extension), 📖 (guides empty), 📬 (email sent), 🎬 ✏️ 🔗 (feature cards), ☕ (footer)"
+    "inlineSVGs": {
+      "style": {
+        "strokeBased": "fill='none' strokeWidth={1.5} stroke='currentColor' (Heroicons-style outline)",
+        "filledDots": "fill='currentColor' (drag handle dots)",
+        "sizing": "w-4 h-4 (small), w-6 h-6 (medium icons), w-2.5 h-2.5 (checkmarks inside circles)"
+      },
+      "usedIcons": {
+        "spinner": "Circular loading spinner (SVG with animate-spin h-4 w-4)",
+        "dragHandle": "6-dot grip pattern (2x3 grid of circles, 16x16 viewBox)",
+        "trash": "Trash/delete icon (15x15 viewBox, filled path)",
+        "lock": "Padlock icon (24x24 viewBox, Heroicons-style stroke)",
+        "checkmark": "Check/tick mark (24x24 viewBox, strokeWidth 3)",
+        "emojis": "Used as decorative icons: 🧩 (extension), 📖 (guides empty), 📬 (email sent), 🎬 ✏️ 🔗 (feature cards), ☕ (footer)"
+      }
     },
-    "guidelines": "Prefer inline SVGs over icon libraries. Use currentColor for fill/stroke so icons inherit text color. Emoji usage is acceptable for decorative/non-functional icons."
+    "guidelines": "Use lucide-react for new UI icons. Use inline SVGs only when a custom shape is needed. Always use currentColor (via Tailwind text-* class) so icons inherit color from context. Emoji usage is acceptable for decorative/non-functional icons."
   },
 
   "scrollbar": {
@@ -475,7 +509,7 @@
       "Use the Badge component for status labels and tags.",
       "Apply shadow-soft as default elevation for cards; shadow-glow for accent-highlighted elements.",
       "Use transition-all duration-200 ease-out for interactive elements, duration-300 for cards.",
-      "Inline SVGs preferred over icon libraries. Use currentColor for icon colors.",
+      "Use lucide-react for standard UI icons. Reserve inline SVGs for custom shapes. Use currentColor via Tailwind text-* for icon colors.",
       "Use text-text-primary for main content, text-text-secondary for descriptions, text-text-muted for meta/hints.",
       "For semantic colors (success/warning/error), use translucent backgrounds (color/10) with matching text and borders (color/20).",
       "Apply animate-card-enter + stagger-N classes for list item entrance animations.",
