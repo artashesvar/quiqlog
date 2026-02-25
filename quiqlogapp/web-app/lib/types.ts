@@ -21,6 +21,9 @@ export interface Step {
   click_x: number | null
   click_y: number | null
   element_label: string | null
+  zoom_level: number
+  pan_x: number
+  pan_y: number
   created_at: string
 }
 

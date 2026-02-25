@@ -30,6 +30,14 @@ export default function PublicStep({ step, stepNumber }: PublicStepProps) {
             height={450}
             className="w-full h-auto"
             unoptimized
+            style={
+              (step.zoom_level ?? 1) > 1
+                ? {
+                    transform: `scale(${step.zoom_level}) translate(${step.pan_x ?? 0}%, ${step.pan_y ?? 0}%)`,
+                    transformOrigin: 'center center',
+                  }
+                : undefined
+            }
           />
         </div>
       )}
