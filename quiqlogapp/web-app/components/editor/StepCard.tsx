@@ -128,6 +128,7 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
     setSavingZoom(true)
     await onUpdate(step.id, { zoom_level: localZoom, pan_x: localPanX, pan_y: localPanY })
     setSavingZoom(false)
+    setZoomBarOpen(false)
   }
 
   function handleResetZoom() {
@@ -148,7 +149,7 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
   }, [])
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (localZoom <= 1 || isReadOnly) return
+    if (localZoom <= 1 || isReadOnly || !zoomBarOpen) return
     e.preventDefault()
     isPanningRef.current = true
     panStartRef.current = { x: e.clientX, y: e.clientY }
@@ -234,7 +235,7 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
         {step.screenshot_url && (
           <div
             ref={containerRef}
-            className={`group/img relative mx-4 mb-3 rounded-md overflow-hidden border border-border transition-shadow duration-300 hover:shadow-soft-lg${localZoom > 1 && !isReadOnly ? ' cursor-grab active:cursor-grabbing' : ''}`}
+            className={`group/img relative mx-4 mb-3 rounded-md overflow-hidden border border-border transition-shadow duration-300 hover:shadow-soft-lg${localZoom > 1 && !isReadOnly && zoomBarOpen ? ' cursor-grab active:cursor-grabbing' : ''}`}
             onPointerDown={!isReadOnly ? handlePointerDown : undefined}
             onPointerMove={!isReadOnly ? handlePointerMove : undefined}
             onPointerUp={!isReadOnly ? handlePointerUp : undefined}
