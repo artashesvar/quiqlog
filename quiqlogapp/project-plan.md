@@ -184,6 +184,7 @@ myawsomeapp/
 - [x] **Extension: persist steps across service worker restarts** — load/save `steps[]` in `chrome.storage.local` so in-progress recordings survive background script restarts
 - [x] **Extension: auth guard on screenshot upload** — `uploadScreenshot` now throws early if `authToken` is null, preventing unauthenticated upload attempts
 - [x] **Extension: security fix for GET_STATE** — `GET_STATE` handler now rejects messages from content scripts (`sender.tab` check), preventing web pages from reading `authToken`
+- [x] **Extension: fix click captured on wrong layer** — `handleClick` now uses `document.elementFromPoint(x, y)` instead of `event.target` to identify the topmost painted element at click coordinates, so popup/modal close buttons are correctly attributed instead of the background page behind them
 
 ### Phase 12 — Production Deploy
 - [ ] Deploy web app to Vercel (connect GitHub repo, set env vars)

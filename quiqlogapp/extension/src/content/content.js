@@ -123,10 +123,58 @@
     return 'Element'
   }
 
+  // ─── Interactive Element Detection ─────────────────────────────────────────
+
+  const INTERACTIVE_TAGS = new Set([
+    'a', 'button', 'input', 'select', 'textarea',
+    'option', 'label', 'summary', 'canvas', 'area', 'details',
+  ])
+
+  const INTERACTIVE_ROLES = new Set([
+    'button', 'link', 'tab', 'checkbox', 'radio',
+    'menuitem', 'menuitemcheckbox', 'menuitemradio',
+    'switch', 'option', 'combobox', 'searchbox',
+    'slider', 'spinbutton', 'textbox', 'treeitem',
+  ])
+
+  function isInteractiveElement(target) {
+    // Walk the target + up to 4 ancestors looking for interactive signals
+    let current = target
+    for (let i = 0; i < 5 && current && current !== document.body; i++) {
+      const tag = current.tagName?.toLowerCase()
+
+      // Semantic HTML tags
+      if (INTERACTIVE_TAGS.has(tag)) return true
+
+      // ARIA roles
+      const role = current.getAttribute?.('role')
+      if (role && INTERACTIVE_ROLES.has(role)) return true
+
+      // Contenteditable regions
+      if (current.getAttribute?.('contenteditable') === 'true') return true
+
+      // Explicitly focusable elements (tabindex >= 0)
+      const tabindex = current.getAttribute?.('tabindex')
+      if (tabindex !== null && tabindex !== '-1' && tabindex !== undefined) return true
+
+      current = current.parentElement
+    }
+
+    // Fallback: cursor:pointer on the clicked element (catches styled custom components)
+    try {
+      if (getComputedStyle(target).cursor === 'pointer') return true
+    } catch {}
+
+    return false
+  }
+
   // ─── Click Handler ──────────────────────────────────────────────────────────
 
   function handleClick(event) {
     if (!isRecording) return
+
+    // Only capture left-clicks (ignore right-click, middle-click)
+    if (event.button !== 0) return
 
     // Ignore clicks on our own overlay elements
     if (event.target.className === '__quiqlog_circle__') return
@@ -134,7 +182,16 @@
 
     const x = event.clientX
     const y = event.clientY
-    const label = extractLabel(event.target)
+
+    // Use the topmost painted element at the click coordinates rather than event.target.
+    // This ensures clicks on popup/modal close buttons are attributed to the popup element
+    // instead of the background page element that the event bubbled up through.
+    const topElement = document.elementFromPoint(x, y) ?? event.target
+
+    // Skip clicks on non-interactive elements (empty areas, backgrounds, layout containers)
+    if (!isInteractiveElement(topElement)) return
+
+    const label = extractLabel(topElement)
 
     // Show visual feedback immediately
     showClickCircle(x, y)
@@ -178,6 +235,6 @@
   // ─── Init ───────────────────────────────────────────────────────────────────
 
   createRecordingOverlay()
-  document.addEventListener('click', handleClick, { capture: true, passive: true })
+  document.addEventListener('mousedown', handleClick, { capture: true, passive: true })
   console.log('[Quiqlog] Content script loaded on', window.location.hostname)
 })()
