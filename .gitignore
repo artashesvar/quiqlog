@@ -4,15 +4,18 @@ node_modules/
 .pnp.js
 
 # Next.js
-web-app/.next/
-web-app/out/
-web-app/build/
+quiqlogapp/web-app/.next/
+quiqlogapp/web-app/out/
+quiqlogapp/web-app/build/
 
 # Environment variables — never commit these
-web-app/.env.local
-web-app/.env
+quiqlogapp/web-app/.env.local
+quiqlogapp/web-app/.env
 .env.local
 .env
+
+# Build artifacts
+quiqlogapp/web-app/tsconfig.tsbuildinfo
 
 # OS
 .DS_Store
