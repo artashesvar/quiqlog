@@ -65,7 +65,7 @@ export default function AppNav({ userEmail, hasSubscription, isPro, isCanceled, 
     <nav className="border-b border-border bg-background-secondary/80 backdrop-blur-sm sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         <Link href="/home">
-          <Image src="/logo.png" alt="Quiqlog" width={673} height={371} className="h-8 w-auto" priority />
+          <Image src="/logo.png" alt="Quiqlog" width={473} height={154} className="h-8 w-auto" priority />
         </Link>
 
         <div className="relative" ref={menuRef}>

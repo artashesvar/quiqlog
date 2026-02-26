@@ -8,7 +8,7 @@ export default function LandingPage() {
       {/* Nav */}
       <nav className="border-b border-border/50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Image src="/logo.png" alt="Quiqlog" width={673} height={371} className="h-8 w-auto" priority />
+          <Image src="/logo.png" alt="Quiqlog" width={473} height={154} className="h-8 w-auto" priority />
           <div className="flex items-center gap-3">
             <Link href="/login">
               <Button variant="ghost" size="sm">Sign in</Button>

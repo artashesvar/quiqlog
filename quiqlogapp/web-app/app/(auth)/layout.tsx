@@ -7,7 +7,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="mb-2">
-            <Image src="/logo.png" alt="Quiqlog" width={673} height={371} className="h-12 w-auto mx-auto" priority />
+            <Image src="/logo.png" alt="Quiqlog" width={473} height={154} className="h-12 w-auto mx-auto" priority />
           </div>
           <p className="text-text-muted text-sm">Instant how-to guides from your clicks</p>
         </div>
