@@ -185,6 +185,10 @@ myawsomeapp/
 - [x] **Extension: auth guard on screenshot upload** — `uploadScreenshot` now throws early if `authToken` is null, preventing unauthenticated upload attempts
 - [x] **Extension: security fix for GET_STATE** — `GET_STATE` handler now rejects messages from content scripts (`sender.tab` check), preventing web pages from reading `authToken`
 - [x] **Extension: fix click captured on wrong layer** — `handleClick` now uses `document.elementFromPoint(x, y)` instead of `event.target` to identify the topmost painted element at click coordinates, so popup/modal close buttons are correctly attributed instead of the background page behind them
+- [x] **Extension: fix screenshot captures wrong window (C1)** — `captureVisibleTab` now resolves the windowId of the recorded tab via `chrome.tabs.get()` instead of passing `null`, so screenshots always capture the correct window when multiple browser windows are open
+- [x] **Extension: fix popup stuck on Recording after on-page stop (S1)** — background broadcasts `RECORDING_STOPPED` at the top of `stopRecording()` so the popup resets immediately regardless of which stop path the user took
+- [x] **Extension: persist targetTabId + sessionId across service worker restarts (C3-A)** — both values are now saved to `chrome.storage.local` on start and cleared on stop; `onTabUpdated` listener is re-registered on SW wake if a recording was active
+- [x] **Extension: keepalive ping to extend SW lifetime to ~15 min (C3-B)** — content script pings background with `KEEPALIVE` every 25s while recording, resetting Chrome's idle timer and keeping the service worker alive for long sessions
 
 ### Phase 12 — Production Deploy
 - [ ] Deploy web app to Vercel (connect GitHub repo, set env vars)

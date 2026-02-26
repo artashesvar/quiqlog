@@ -13,10 +13,17 @@ let sessionId = null   // unique ID per recording session, used in upload path
 // Load persisted state on startup.
 // Stored as a promise so startRecording can await it to avoid race conditions
 // when the service worker restarts and a message arrives before storage is read.
-const stateReady = chrome.storage.local.get(['recording', 'authToken', 'steps']).then(result => {
+const stateReady = chrome.storage.local.get(['recording', 'authToken', 'steps', 'targetTabId', 'sessionId']).then(result => {
   recording = result.recording ?? false
   authToken = result.authToken ?? null
   steps = result.steps ?? []
+  targetTabId = result.targetTabId ?? null
+  sessionId = result.sessionId ?? null
+  // If the service worker was terminated mid-recording, re-register the tab
+  // update listener so navigation in the recorded tab still triggers re-injection.
+  if (recording && targetTabId !== null) {
+    chrome.tabs.onUpdated.addListener(onTabUpdated)
+  }
 })
 
 // ─── Screenshot + Annotation ─────────────────────────────────────────────────
@@ -35,8 +42,21 @@ async function captureAndAnnotateTab(clickX, clickY, dpr = 1) {
     await chrome.tabs.sendMessage(targetTabId, { type: 'HIDE_OVERLAY' }).catch(() => {})
   }
 
+  // Resolve the window that contains the recorded tab so we capture the right
+  // window even when the user has multiple browser windows open. Falls back to
+  // null (last-focused window) if targetTabId has been closed or is unavailable.
+  let captureWindowId = null
+  if (targetTabId !== null) {
+    try {
+      const tab = await chrome.tabs.get(targetTabId)
+      captureWindowId = tab.windowId
+    } catch {
+      // Tab was closed between the click and screenshot; proceed with fallback.
+    }
+  }
+
   try {
-    const dataUrl = await chrome.tabs.captureVisibleTab(null, {
+    const dataUrl = await chrome.tabs.captureVisibleTab(captureWindowId, {
       format: 'png',
       quality: 90,
     })
@@ -198,7 +218,7 @@ async function startRecording(tabId = null) {
   sessionId = crypto.randomUUID()
   targetTabId = tabId
   clickQueue = Promise.resolve() // reset queue in case it was left in a rejected state
-  await chrome.storage.local.set({ recording: true, steps: [], stepCount: 0 })
+  await chrome.storage.local.set({ recording: true, steps: [], stepCount: 0, targetTabId: tabId, sessionId })
   await chrome.action.setBadgeText({ text: '●' })
   await chrome.action.setBadgeBackgroundColor({ color: '#EF4444' })
 
@@ -217,7 +237,10 @@ async function startRecording(tabId = null) {
 async function stopRecording() {
   recording = false
   chrome.tabs.onUpdated.removeListener(onTabUpdated)
-  await chrome.storage.local.set({ recording: false })
+  // Notify the popup immediately so it resets even if the user stopped via the
+  // on-page overlay button rather than the popup's own Stop button.
+  chrome.runtime.sendMessage({ type: 'RECORDING_STOPPED' }).catch(() => {})
+  await chrome.storage.local.set({ recording: false, targetTabId: null, sessionId: null })
   await chrome.action.setBadgeText({ text: '' })
 
   // Wait for any in-progress click processing to finish.
@@ -293,6 +316,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (type === 'STOP_RECORDING') {
     stopRecording().then(() => sendResponse({ ok: true }))
     return true
+  }
+
+  if (type === 'KEEPALIVE') {
+    // Receiving this message is enough to reset Chrome's service worker idle timer.
+    sendResponse({ ok: true })
+    return false
   }
 
   if (type === 'CLICK_RECORDED') {

@@ -9,6 +9,7 @@
 
   // Always true on injection — the background only injects this script when recording.
   let isRecording = true
+  let keepaliveInterval = null
 
   // ─── Overlay IDs ────────────────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@
     btn.addEventListener('click', (e) => {
       e.stopPropagation()
       removeRecordingOverlay()
+      stopKeepalive()
       isRecording = false // prevent further step recording immediately
       chrome.runtime.sendMessage({ type: 'STOP_RECORDING' })
     })
@@ -168,6 +170,26 @@
     return false
   }
 
+  // ─── Service Worker Keepalive ────────────────────────────────────────────────
+  // Ping the background every 25s while recording to prevent Chrome from
+  // terminating the service worker due to inactivity (MV3 ~5-minute idle limit).
+  // With pings every 25s the SW stays alive for as long as the user is on the
+  // recorded tab, extending effective lifetime to ~15 minutes or more.
+
+  function startKeepalive() {
+    if (keepaliveInterval !== null) return // already running
+    keepaliveInterval = setInterval(() => {
+      chrome.runtime.sendMessage({ type: 'KEEPALIVE' }).catch(() => {})
+    }, 25000)
+  }
+
+  function stopKeepalive() {
+    if (keepaliveInterval !== null) {
+      clearInterval(keepaliveInterval)
+      keepaliveInterval = null
+    }
+  }
+
   // ─── Click Handler ──────────────────────────────────────────────────────────
 
   function handleClick(event) {
@@ -213,8 +235,13 @@
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message.type === 'SET_RECORDING') {
       isRecording = message.value
-      if (message.value) createRecordingOverlay()
-      else removeRecordingOverlay()
+      if (message.value) {
+        createRecordingOverlay()
+        startKeepalive()
+      } else {
+        removeRecordingOverlay()
+        stopKeepalive()
+      }
     }
 
     if (message.type === 'HIDE_OVERLAY') {
@@ -235,6 +262,7 @@
   // ─── Init ───────────────────────────────────────────────────────────────────
 
   createRecordingOverlay()
+  startKeepalive()
   document.addEventListener('mousedown', handleClick, { capture: true, passive: true })
   console.log('[Quiqlog] Content script loaded on', window.location.hostname)
 })()

@@ -191,13 +191,19 @@ recordBtn.addEventListener('click', async () => {
   }
 })
 
-// Listen for step count updates from background
+// Listen for updates from background
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type === 'STEP_COUNT') {
     stepCountEl.textContent = message.count
     if (message.count > 0) {
       stepCountDisplay.style.display = 'flex'
     }
+  }
+
+  // Background broadcasts this when recording stops via any path (popup button
+  // or the on-page overlay button). Keeps popup UI in sync in all cases.
+  if (message.type === 'RECORDING_STOPPED') {
+    updateUI(false, 0, true)
   }
 })
 
