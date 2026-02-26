@@ -21,6 +21,7 @@ export default function GuideEditor({ guide: initialGuide, isLocked = false }: G
   const [guide, setGuide] = useState(initialGuide)
   const [steps, setSteps] = useState<Step[]>(initialGuide.steps ?? [])
   const [copied, setCopied] = useState(false)
+  const [generatingPdf, setGeneratingPdf] = useState(false)
 
   const shareUrl = `${APP_URL}/guide/${guide.slug}`
 
@@ -62,17 +63,23 @@ export default function GuideEditor({ guide: initialGuide, isLocked = false }: G
   }, [])
 
   const reorderSteps = useCallback(async (reordered: Step[]) => {
+    const previous = steps
     setSteps(reordered)
-    await Promise.all(
-      reordered.map((step, index) =>
-        fetch(`/api/steps/${step.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order_index: index }),
-        })
+    try {
+      await Promise.all(
+        reordered.map((step, index) =>
+          fetch(`/api/steps/${step.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_index: index }),
+          })
+        )
       )
-    )
-  }, [])
+    } catch {
+      setSteps(previous)
+      toast.error('Failed to reorder — please try again')
+    }
+  }, [steps])
 
   const insertBlock = useCallback(async (afterIndex: number, type: 'tip' | 'alert') => {
     const res = await fetch(`/api/guides/${guide.id}/steps`, {
@@ -107,6 +114,28 @@ export default function GuideEditor({ guide: initialGuide, isLocked = false }: G
     await copyToClipboard(shareUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function handleGeneratePdf() {
+    if (generatingPdf) return
+    setGeneratingPdf(true)
+    try {
+      const res = await fetch(`/api/guides/${guide.id}/export-pdf`)
+      if (!res.ok) throw new Error('Export failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${guide.title || 'guide'}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 10000)
+    } catch {
+      toast.error('Failed to generate PDF')
+    } finally {
+      setGeneratingPdf(false)
+    }
   }
 
   return (
@@ -151,6 +180,15 @@ export default function GuideEditor({ guide: initialGuide, isLocked = false }: G
                   View Public Guide ↗
                 </Button>
               </a>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="px-5 w-full"
+                loading={generatingPdf}
+                onClick={handleGeneratePdf}
+              >
+                Generate PDF
+              </Button>
             </>
           )}
         </div>

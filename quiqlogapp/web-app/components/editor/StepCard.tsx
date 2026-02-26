@@ -2,13 +2,12 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Image from 'next/image'
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Dialog } from '@/components/ui/Dialog'
 import BlurEditor from '@/components/editor/BlurEditor'
 import AnnotationEditor from '@/components/editor/AnnotationEditor'
+import IndicatorEditor from '@/components/editor/IndicatorEditor'
 import type { Step } from '@/lib/types'
 
 const ZOOM_LEVELS = [1, 1.5, 2] as const
@@ -18,10 +17,12 @@ interface StepCardProps {
   stepNumber: number
   onUpdate: (stepId: string, updates: Partial<Step>) => Promise<void>
   onDelete: (stepId: string) => Promise<boolean>
+  onMoveUp?: () => void
+  onMoveDown?: () => void
   isReadOnly?: boolean
 }
 
-export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadOnly = false }: StepCardProps) {
+export default function StepCard({ step, stepNumber, onUpdate, onDelete, onMoveUp, onMoveDown, isReadOnly = false }: StepCardProps) {
   const [title, setTitle] = useState(step.title)
   const [description, setDescription] = useState(step.description)
   const [deleting, setDeleting] = useState(false)
@@ -29,6 +30,7 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [blurEditorOpen, setBlurEditorOpen] = useState(false)
   const [annotationEditorOpen, setAnnotationEditorOpen] = useState(false)
+  const [indicatorEditorOpen, setIndicatorEditorOpen] = useState(false)
   const [zoomBarOpen, setZoomBarOpen] = useState(false)
   const [savingZoom, setSavingZoom] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -41,12 +43,22 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
   const [localPanX, setLocalPanX] = useState(savedPanX)
   const [localPanY, setLocalPanY] = useState(savedPanY)
 
+  // Local indicator state — updated optimistically on Apply so the static circle
+  // appears at the new position immediately without waiting for the DB round-trip.
+  const [localIndicatorX, setLocalIndicatorX] = useState<number | null>(step.indicator_x ?? null)
+  const [localIndicatorY, setLocalIndicatorY] = useState<number | null>(step.indicator_y ?? null)
+
   // Sync local state when step prop changes (e.g. after save)
   useEffect(() => {
     setLocalZoom(step.zoom_level ?? 1)
     setLocalPanX(step.pan_x ?? 0)
     setLocalPanY(step.pan_y ?? 0)
   }, [step.zoom_level, step.pan_x, step.pan_y])
+
+  useEffect(() => {
+    setLocalIndicatorX(step.indicator_x ?? null)
+    setLocalIndicatorY(step.indicator_y ?? null)
+  }, [step.indicator_x, step.indicator_y])
 
   const hasZoomChanges = localZoom !== savedZoom || localPanX !== savedPanX || localPanY !== savedPanY
 
@@ -55,21 +67,6 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
   const panStartRef = useRef({ x: 0, y: 0 })
   const panStartValuesRef = useRef({ panX: 0, panY: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
-
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: step.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  }
 
   // Auto-resize textarea
   useEffect(() => {
@@ -113,11 +110,9 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
   function handleZoomChange(level: number) {
     setLocalZoom(level)
     if (level === 1) {
-      // Reset pan when going back to 1x
       setLocalPanX(0)
       setLocalPanY(0)
     } else {
-      // Clamp current pan to new zoom bounds
       const maxPan = ((level - 1) / (2 * level)) * 100
       setLocalPanX(prev => Math.max(-maxPan, Math.min(maxPan, prev)))
       setLocalPanY(prev => Math.max(-maxPan, Math.min(maxPan, prev)))
@@ -139,8 +134,6 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
 
   // Pan handlers
   const clampPan = useCallback((px: number, py: number, zoom: number) => {
-    // Max pan is the percentage of the overflow that can be shifted
-    // At scale S, the image is S times wider. The overflow on each side is (S-1)/(2*S) * 100%
     const maxPan = ((zoom - 1) / (2 * zoom)) * 100
     return {
       x: Math.max(-maxPan, Math.min(maxPan, px)),
@@ -155,12 +148,11 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
     panStartRef.current = { x: e.clientX, y: e.clientY }
     panStartValuesRef.current = { panX: localPanX, panY: localPanY }
     ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
-  }, [localZoom, localPanX, localPanY, isReadOnly])
+  }, [localZoom, localPanX, localPanY, isReadOnly, zoomBarOpen])
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!isPanningRef.current || !containerRef.current) return
     const rect = containerRef.current.getBoundingClientRect()
-    // Convert pixel delta to percentage of container
     const dx = ((e.clientX - panStartRef.current.x) / rect.width) * 100
     const dy = ((e.clientY - panStartRef.current.y) / rect.height) * 100
     const clamped = clampPan(
@@ -177,35 +169,14 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
   }, [])
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div>
       <Card animate className="overflow-hidden">
-        {/* Step header with drag handle */}
+        {/* Step header */}
         <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-          {/* Drag handle */}
-          {!isReadOnly && (
-            <button
-              {...attributes}
-              {...listeners}
-              className="cursor-grab active:cursor-grabbing text-text-muted hover:text-text-secondary transition-colors flex-shrink-0"
-              title="Drag to reorder"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <circle cx="5" cy="4" r="1.5"/>
-                <circle cx="11" cy="4" r="1.5"/>
-                <circle cx="5" cy="8" r="1.5"/>
-                <circle cx="11" cy="8" r="1.5"/>
-                <circle cx="5" cy="12" r="1.5"/>
-                <circle cx="11" cy="12" r="1.5"/>
-              </svg>
-            </button>
-          )}
-
-          {/* Step number */}
           <span className="flex-shrink-0 w-6 h-6 rounded-full bg-accent/15 text-accent text-xs font-semibold flex items-center justify-center">
             {stepNumber}
           </span>
 
-          {/* Inline editable title */}
           <input
             value={title}
             onChange={(e) => { if (!isReadOnly) setTitle(e.target.value) }}
@@ -215,7 +186,21 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
             placeholder="Step title..."
           />
 
-          {/* Delete */}
+          {onMoveUp && (
+            <Button variant="ghost" size="sm" onClick={onMoveUp} className="text-text-muted hover:text-text-primary flex-shrink-0" title="Move up">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 10L7.5 5.5L12 10"/>
+              </svg>
+            </Button>
+          )}
+          {onMoveDown && (
+            <Button variant="ghost" size="sm" onClick={onMoveDown} className="text-text-muted hover:text-text-primary flex-shrink-0" title="Move down">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 5L7.5 9.5L12 5"/>
+              </svg>
+            </Button>
+          )}
+
           {!isReadOnly && (
             <Button
               variant="ghost"
@@ -255,7 +240,34 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
               }}
             />
 
-            {/* Top-right toolbar: annotate, blur, zoom */}
+            {/* Static indicator overlay — hidden while the editor is open to avoid two circles */}
+            {!indicatorEditorOpen && localIndicatorX !== null && localIndicatorY !== null && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  transform: `scale(${localZoom}) translate(${localPanX}%, ${localPanY}%)`,
+                  transformOrigin: 'center center',
+                  pointerEvents: 'none',
+                }}
+              >
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: `${localIndicatorX}%`,
+                    top: `${localIndicatorY}%`,
+                    transform: `translate(-50%, -50%) scale(${1 / localZoom})`,
+                    width: 40,
+                    height: 40,
+                  }}
+                >
+                  <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(255, 215, 0, 0.35)', border: '2.5px solid #FFD700' }} />
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 10, height: 10, borderRadius: '50%', background: '#FFD700' }} />
+                </div>
+              </div>
+            )}
+
+            {/* Top-right toolbar: annotate, blur, indicator, zoom */}
             {!isReadOnly && (
               <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover/img:opacity-100 transition-all">
                 <button
@@ -279,6 +291,19 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
                   </svg>
                 </button>
                 <button
+                  onClick={() => setIndicatorEditorOpen(true)}
+                  className="p-1.5 rounded-md bg-[#6366F1] text-white hover:bg-[#4F46E5] transition-colors"
+                  title="Reposition click indicator"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="8" cy="8" r="3" />
+                    <line x1="8" y1="1" x2="8" y2="4" />
+                    <line x1="8" y1="12" x2="8" y2="15" />
+                    <line x1="1" y1="8" x2="4" y2="8" />
+                    <line x1="12" y1="8" x2="15" y2="8" />
+                  </svg>
+                </button>
+                <button
                   onClick={() => setZoomBarOpen(prev => !prev)}
                   className={`p-1.5 rounded-md transition-colors ${zoomBarOpen ? 'bg-[#4F46E5] text-white' : 'bg-[#6366F1] text-white hover:bg-[#4F46E5]'}`}
                   title="Zoom screenshot"
@@ -293,7 +318,7 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
               </div>
             )}
 
-            {/* Zoom bar — bottom center, shown when zoom toolbar button is toggled */}
+            {/* Zoom bar */}
             {!isReadOnly && zoomBarOpen && (
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-0.5 bg-background-secondary/90 backdrop-blur-sm border border-border rounded-md p-0.5 shadow-soft">
                 {ZOOM_LEVELS.map(level => (
@@ -312,7 +337,7 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
               </div>
             )}
 
-            {/* Persistent zoom indicator when zoomed (visible even without hover) */}
+            {/* Persistent zoom indicator */}
             {localZoom > 1 && !zoomBarOpen && (
               <div className="absolute bottom-2 right-2 px-1.5 py-0.5 text-[10px] font-medium bg-accent/80 text-white rounded backdrop-blur-sm">
                 {localZoom}x
@@ -321,7 +346,7 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
           </div>
         )}
 
-        {/* Apply / Reset buttons for zoom changes */}
+        {/* Apply / Reset for zoom */}
         {!isReadOnly && hasZoomChanges && step.screenshot_url && (
           <div className="flex items-center justify-end gap-2 mx-4 mb-3">
             <button
@@ -362,6 +387,22 @@ export default function StepCard({ step, stepNumber, onUpdate, onDelete, isReadO
               setBlurEditorOpen(false)
             }}
             onClose={() => setBlurEditorOpen(false)}
+          />
+        )}
+        {indicatorEditorOpen && step.screenshot_url && (
+          <IndicatorEditor
+            imageUrl={step.screenshot_url}
+            initialX={step.indicator_x}
+            initialY={step.indicator_y}
+            onSave={async (x, y) => {
+              // Update local state and close the editor immediately so the
+              // static circle appears at the new position without any overlap.
+              setLocalIndicatorX(x)
+              setLocalIndicatorY(y)
+              setIndicatorEditorOpen(false)
+              await onUpdate(step.id, { indicator_x: x, indicator_y: y })
+            }}
+            onClose={() => setIndicatorEditorOpen(false)}
           />
         )}
 

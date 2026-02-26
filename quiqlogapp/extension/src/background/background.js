@@ -1,7 +1,7 @@
 // Quiqlog Background Service Worker
 // Handles: recording state, screenshot capture, annotation, session upload
 
-const APP_URL = 'https://quiqlog-git-staging-artashesvardanyan-9805s-projects.vercel.app'
+const APP_URL = 'http://localhost:3000'
 
 // ─── In-memory state (avoids read/write race conditions) ─────────────────────
 let recording = false
@@ -26,9 +26,12 @@ const stateReady = chrome.storage.local.get(['recording', 'authToken', 'steps', 
   }
 })
 
-// ─── Screenshot + Annotation ─────────────────────────────────────────────────
+// ─── Screenshot Capture ───────────────────────────────────────────────────────
+// The yellow click indicator is now rendered as a CSS overlay in the web app
+// using the stored indicator_x/indicator_y percentage coordinates, so we capture
+// a clean screenshot without burning the circle into the image.
 
-async function captureAndAnnotateTab(clickX, clickY, dpr = 1) {
+async function captureTab() {
   // Enforce minimum interval between captures to stay under Chrome's rate limit
   const now = Date.now()
   const wait = MIN_CAPTURE_INTERVAL_MS - (now - lastCaptureTime)
@@ -60,7 +63,8 @@ async function captureAndAnnotateTab(clickX, clickY, dpr = 1) {
       format: 'png',
       quality: 90,
     })
-    return await annotateScreenshot(dataUrl, clickX, clickY, dpr)
+    const response = await fetch(dataUrl)
+    return await response.blob()
   } catch (err) {
     console.error('[Quiqlog] Screenshot failed:', err)
     return null
@@ -70,42 +74,6 @@ async function captureAndAnnotateTab(clickX, clickY, dpr = 1) {
       chrome.tabs.sendMessage(targetTabId, { type: 'SHOW_OVERLAY' }).catch(() => {})
     }
   }
-}
-
-async function annotateScreenshot(dataUrl, x, y, dpr = 1) {
-  const response = await fetch(dataUrl)
-  const blob = await response.blob()
-  const imageBitmap = await createImageBitmap(blob)
-
-  const canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height)
-  const ctx = canvas.getContext('2d')
-  ctx.drawImage(imageBitmap, 0, 0)
-
-  // Scale CSS pixel coordinates to device pixels so the annotation
-  // lands at the correct position on high-DPI screenshots.
-  const px = x * dpr
-  const py = y * dpr
-  const radius = 22 * dpr
-  const dotRadius = 5 * dpr
-
-  ctx.beginPath()
-  ctx.arc(px, py, radius, 0, 2 * Math.PI)
-  ctx.fillStyle = 'rgba(255, 220, 0, 0.35)'
-  ctx.fill()
-
-  ctx.beginPath()
-  ctx.arc(px, py, radius, 0, 2 * Math.PI)
-  ctx.strokeStyle = '#FFD700'
-  ctx.lineWidth = 3 * dpr
-  ctx.stroke()
-
-  ctx.beginPath()
-  ctx.arc(px, py, dotRadius, 0, 2 * Math.PI)
-  ctx.fillStyle = '#FFD700'
-  ctx.fill()
-
-  // Return Blob directly instead of converting to base64 data URL
-  return canvas.convertToBlob({ type: 'image/png' })
 }
 
 // ─── Screenshot Upload ───────────────────────────────────────────────────────
@@ -152,11 +120,11 @@ function enqueueClick(clickData) {
   clickQueue = clickQueue.then(() => processClick(clickData))
 }
 
-async function processClick({ x, y, dpr, label, url, pageTitle }) {
+async function processClick({ x, y, viewportWidth, viewportHeight, label, url, pageTitle }) {
   if (!recording) return
 
   try {
-    const screenshotBlob = await captureAndAnnotateTab(x, y, dpr)
+    const screenshotBlob = await captureTab()
     let screenshotUrl = null
 
     if (screenshotBlob && authToken) {
@@ -175,7 +143,7 @@ async function processClick({ x, y, dpr, label, url, pageTitle }) {
     }
 
     // Store only metadata + URL (no base64 blob in memory)
-    steps.push({ x, y, label, url, pageTitle, screenshotUrl })
+    steps.push({ x, y, viewportWidth, viewportHeight, label, url, pageTitle, screenshotUrl })
 
     await chrome.storage.local.set({ steps, stepCount: steps.length })
     chrome.runtime.sendMessage({ type: 'STEP_COUNT', count: steps.length }).catch(() => {})
@@ -279,8 +247,8 @@ async function stopRecording() {
       },
       body: JSON.stringify({
         title: steps[0]?.pageTitle ?? 'New Guide',
-        steps: steps.map(({ x, y, label, url, pageTitle, screenshotUrl }) => ({
-          x, y, label, url, pageTitle, screenshotUrl,
+        steps: steps.map(({ x, y, viewportWidth, viewportHeight, label, url, pageTitle, screenshotUrl }) => ({
+          x, y, viewportWidth, viewportHeight, label, url, pageTitle, screenshotUrl,
         })),
       }),
     })

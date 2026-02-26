@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import type { Step } from '@/lib/types'
@@ -49,21 +47,6 @@ export default function TipAlertBlock({ block, onUpdate, onDelete, isReadOnly = 
   const [deleting, setDeleting] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: block.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  }
-
   const type = block.type === 'alert' ? 'alert' : 'tip'
   const { label, badgeClass, borderClass, bodyPlaceholder, icon } = config[type]
 
@@ -90,28 +73,9 @@ export default function TipAlertBlock({ block, onUpdate, onDelete, isReadOnly = 
   }
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div>
       <Card animate className={`overflow-hidden ${borderClass}`}>
         <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-          {/* Drag handle */}
-          {!isReadOnly && (
-            <button
-              {...attributes}
-              {...listeners}
-              className="cursor-grab active:cursor-grabbing text-text-muted hover:text-text-secondary transition-colors flex-shrink-0"
-              title="Drag to reorder"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <circle cx="5" cy="4" r="1.5"/>
-                <circle cx="11" cy="4" r="1.5"/>
-                <circle cx="5" cy="8" r="1.5"/>
-                <circle cx="11" cy="8" r="1.5"/>
-                <circle cx="5" cy="12" r="1.5"/>
-                <circle cx="11" cy="12" r="1.5"/>
-              </svg>
-            </button>
-          )}
-
           {/* Type badge */}
           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${badgeClass}`}>
             {icon}

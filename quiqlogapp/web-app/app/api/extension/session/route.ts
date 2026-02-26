@@ -94,6 +94,8 @@ export async function POST(request: Request) {
         click_x: step.x,
         click_y: step.y,
         element_label: step.label,
+        indicator_x: step.viewportWidth ? (step.x / step.viewportWidth) * 100 : null,
+        indicator_y: step.viewportHeight ? (step.y / step.viewportHeight) * 100 : null,
       }
     })
   )

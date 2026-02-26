@@ -19,7 +19,7 @@ A browser extension + web app (like Scribe.com / Tango.ai) that records a user's
 | Fonts | Space Grotesk (headings), Work Sans (body) |
 | Auth + DB + Storage | Supabase |
 | Extension | Chrome MV3, Vanilla JS |
-| Key Packages | @supabase/ssr, @dnd-kit/core, @dnd-kit/sortable, nanoid, react-hot-toast |
+| Key Packages | @supabase/ssr, nanoid, react-hot-toast |
 
 ---
 
@@ -46,8 +46,8 @@ myawsomeapp/
 │   ├── components/
 │   │   ├── ui/              # Button, Card, Input, Badge
 │   │   ├── dashboard/       # GuideCard, GuideList, ExtensionCTA, NewGuideButton
-│   │   ├── editor/          # GuideEditor, GuideHeader, StepList, StepCard
-│   │   ├── public/          # PublicGuideHeader, PublicStep
+│   │   ├── editor/          # GuideEditor, GuideHeader, StepList, StepCard, BlurEditor, IndicatorEditor
+│   │   ├── public/          # PublicGuideHeader, PublicStep, PublicGuideViewer
 │   │   └── AppNav.tsx
 │   ├── lib/
 │   │   ├── supabase/        # client.ts, server.ts
@@ -72,8 +72,9 @@ myawsomeapp/
 │   └── icons/               # icon16/48/128.png (add manually)
 │
 ├── supabase/
-│   ├── schema.sql            # tables, RLS, triggers
-│   └── storage-policies.sql  # storage bucket RLS
+│   ├── schema.sql                    # tables, RLS, triggers
+│   ├── storage-policies.sql          # storage bucket RLS
+│   └── add-indicator-position.sql    # migration: indicator_x, indicator_y on steps
 │
 ├── project-plan.md           # this file
 └── .gitignore
@@ -129,8 +130,9 @@ myawsomeapp/
 - [x] `app/(app)/guides/[id]/editor/page.tsx` — server renders guide+steps
 - [x] `components/editor/GuideEditor.tsx` — client wrapper with state + mutations
 - [x] `components/editor/GuideHeader.tsx` — editable title, publish toggle, share link
-- [x] `components/editor/StepList.tsx` — @dnd-kit drag-and-drop
-- [x] `components/editor/StepCard.tsx` — screenshot, inline edit title/description, delete
+- [x] `components/editor/StepList.tsx` — group-based up/down arrow reordering (no DnD)
+- [x] `components/editor/StepCard.tsx` — screenshot, inline edit title/description, delete, move arrows
+- [x] `components/editor/TipAlertBlock.tsx` — tip/alert blocks, not independently movable
 
 ### ✅ Phase 7 — Public Guide Viewer
 - [x] `app/guide/[slug]/page.tsx` — SEO-ready public guide page
@@ -140,8 +142,8 @@ myawsomeapp/
 
 ### ✅ Phase 8 — Chrome Extension (Core)
 - [x] `extension/manifest.json` — complete MV3 manifest
-- [x] `extension/src/background/background.js` — recording state, captureVisibleTab, OffscreenCanvas annotation, session POST
-- [x] `extension/src/content/content.js` — click listener, label extraction, storage sync
+- [x] `extension/src/background/background.js` — recording state, captureVisibleTab, raw PNG capture (no burned-in circle), session POST with viewportWidth/viewportHeight
+- [x] `extension/src/content/content.js` — click listener, label extraction, storage sync, viewportWidth/viewportHeight in CLICK_RECORDED
 - [x] `extension/src/content/styles.css` — pulse animation for overlay
 - [x] `extension/src/popup/popup.html` — popup UI
 - [x] `extension/src/popup/popup.js` — recording toggle, step count
@@ -179,7 +181,8 @@ myawsomeapp/
 ### Phase 11 — Improvements
 - [ ] Handle token refresh (Supabase tokens expire after 1 hour — re-sync on dashboard visit already handles this)
 - [ ] Add loading skeletons to editor and dashboard
-- [ ] Drag-and-drop step reordering test (already built, verify it works)
+- [x] **Replaced drag-and-drop with group-based arrow reordering** — removed @dnd-kit entirely from editor; steps move with their attached tips/alerts as an atomic group via up/down arrows; tips/alerts have no independent move controls
+- [x] **Removed insert-before-first-step button** — the "+" `InsertBlockMenu` that appeared above step 1 was removed; tips/alerts can only be inserted after a step
 - [x] **Tip/Alert insert buttons visible in editing mode** — `InsertBlockMenu` `+` button was opacity-0 (hover-only, invisible); changed to opacity-40 at rest so users can discover the feature
 - [x] **Extension: persist steps across service worker restarts** — load/save `steps[]` in `chrome.storage.local` so in-progress recordings survive background script restarts
 - [x] **Extension: auth guard on screenshot upload** — `uploadScreenshot` now throws early if `authToken` is null, preventing unauthenticated upload attempts
@@ -189,6 +192,8 @@ myawsomeapp/
 - [x] **Extension: fix popup stuck on Recording after on-page stop (S1)** — background broadcasts `RECORDING_STOPPED` at the top of `stopRecording()` so the popup resets immediately regardless of which stop path the user took
 - [x] **Extension: persist targetTabId + sessionId across service worker restarts (C3-A)** — both values are now saved to `chrome.storage.local` on start and cleared on stop; `onTabUpdated` listener is re-registered on SW wake if a recording was active
 - [x] **Extension: keepalive ping to extend SW lifetime to ~15 min (C3-B)** — content script pings background with `KEEPALIVE` every 25s while recording, resetting Chrome's idle timer and keeping the service worker alive for long sessions
+- [x] **Drag-and-reposition click indicator** — removed burned-in yellow circle from extension screenshots; `indicator_x`/`indicator_y` (percentage) stored in DB; CSS overlay circle rendered in editor and public view; `IndicatorEditor.tsx` portal (same pattern as BlurEditor) lets user drag to reposition; Apply saves to DB optimistically; static circle follows zoom/pan with counter-scale for consistent size; `setOverlayVisibility` in content.js now also hides `.__quiqlog_circle__` feedback elements so they are never captured in screenshots
+- [x] **DB migration** — `supabase/add-indicator-position.sql` adds nullable `indicator_x FLOAT` and `indicator_y FLOAT` columns to `steps` table
 
 ### Phase 12 — Production Deploy
 - [ ] Deploy web app to Vercel (connect GitHub repo, set env vars)

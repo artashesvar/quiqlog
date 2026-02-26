@@ -76,6 +76,10 @@
     const btn = document.getElementById(STOP_BTN_ID)
     if (frame) frame.style.visibility = v
     if (btn) btn.style.visibility = v
+    // Also hide any click-feedback circles so they don't appear in screenshots
+    document.querySelectorAll('.__quiqlog_circle__').forEach(el => {
+      el.style.visibility = v
+    })
   }
 
   // ─── Overlay Circle ─────────────────────────────────────────────────────────
@@ -224,6 +228,8 @@
       x,
       y,
       dpr: window.devicePixelRatio || 1,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
       label,
       url: window.location.href,
       pageTitle: document.title,

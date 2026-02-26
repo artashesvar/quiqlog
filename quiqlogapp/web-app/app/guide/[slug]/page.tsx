@@ -1,8 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import PublicGuideHeader from '@/components/public/PublicGuideHeader'
-import PublicStep from '@/components/public/PublicStep'
-import PublicTipAlertBlock from '@/components/public/PublicTipAlertBlock'
+import PublicGuideViewer from '@/components/public/PublicGuideViewer'
 import type { Metadata } from 'next'
 import { APP_NAME } from '@/lib/constants'
 
@@ -56,25 +54,7 @@ export default async function PublicGuidePage({ params }: Props) {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 flex flex-col gap-8">
-        <PublicGuideHeader guide={guide} />
-
-        <div className="flex flex-col gap-6">
-          {(() => {
-            let stepCount = 0
-            return guide.steps?.map((item: any, index: number) => {
-              if (item.type === 'step') stepCount++
-              return (
-                <div key={item.id} className={`stagger-${Math.min(index + 1, 9)}`}>
-                  {item.type === 'tip' || item.type === 'alert' ? (
-                    <PublicTipAlertBlock block={item} />
-                  ) : (
-                    <PublicStep step={item} stepNumber={stepCount} />
-                  )}
-                </div>
-              )
-            })
-          })()}
-        </div>
+        <PublicGuideViewer guide={guide} />
 
         {/* Footer */}
         <footer className="pt-8 border-t border-border text-center">

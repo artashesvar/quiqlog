@@ -1,30 +1,22 @@
-import Link from 'next/link'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
-import { APP_NAME } from '@/lib/constants'
 import type { Guide, Step } from '@/lib/types'
 
 interface PublicGuideHeaderProps {
   guide: Guide & { steps: Step[] }
+  title?: string
+  rightAction?: React.ReactNode
 }
 
-export default function PublicGuideHeader({ guide }: PublicGuideHeaderProps) {
+export default function PublicGuideHeader({ guide, title, rightAction }: PublicGuideHeaderProps) {
   return (
     <div className="flex flex-col gap-4">
-      {/* Branding */}
-      <Link href="/" className="inline-flex items-center gap-2 w-fit">
-        <div className="w-2 h-2 rounded-full bg-accent shadow-glow" />
-        <span className="font-heading font-bold text-sm text-text-secondary">
-          {APP_NAME}
-        </span>
-      </Link>
-
       {/* Guide title */}
-      <h1 className="font-heading font-bold text-3xl sm:text-4xl text-text-primary leading-tight">
-        {guide.title}
+      <h1 className="font-heading font-bold text-2xl sm:text-3xl text-text-primary leading-tight">
+        {title ?? guide.title}
       </h1>
 
-      {/* Meta */}
+      {/* Meta row: logo + step count + date + optional toggle */}
       <div className="flex items-center gap-3 flex-wrap">
         {(() => {
           const count = guide.steps?.filter((s) => s.type === 'step').length ?? 0
@@ -37,6 +29,11 @@ export default function PublicGuideHeader({ guide }: PublicGuideHeaderProps) {
         <span className="text-text-muted text-sm">
           Created {formatDate(guide.created_at)}
         </span>
+        {rightAction && (
+          <div className="ml-auto">
+            {rightAction}
+          </div>
+        )}
       </div>
 
       <hr className="border-border" />

@@ -8,6 +8,11 @@ interface PublicStepProps {
 }
 
 export default function PublicStep({ step, stepNumber }: PublicStepProps) {
+  const zoom = step.zoom_level ?? 1
+  const panX = step.pan_x ?? 0
+  const panY = step.pan_y ?? 0
+  const hasIndicator = step.indicator_x !== null && step.indicator_y !== null
+
   return (
     <Card animate className="overflow-hidden">
       {/* Step header */}
@@ -22,7 +27,7 @@ export default function PublicStep({ step, stepNumber }: PublicStepProps) {
 
       {/* Screenshot */}
       {step.screenshot_url && (
-        <div className="mx-5 mb-3 rounded-md overflow-hidden border border-border transition-shadow duration-300 hover:shadow-soft-lg">
+        <div className="relative mx-5 mb-3 rounded-md overflow-hidden border border-border transition-shadow duration-300 hover:shadow-soft-lg">
           <Image
             src={step.screenshot_url}
             alt={step.title || `Step ${stepNumber}`}
@@ -31,14 +36,58 @@ export default function PublicStep({ step, stepNumber }: PublicStepProps) {
             className="w-full h-auto"
             unoptimized
             style={
-              (step.zoom_level ?? 1) > 1
+              zoom > 1
                 ? {
-                    transform: `scale(${step.zoom_level}) translate(${step.pan_x ?? 0}%, ${step.pan_y ?? 0}%)`,
+                    transform: `scale(${zoom}) translate(${panX}%, ${panY}%)`,
                     transformOrigin: 'center center',
                   }
                 : undefined
             }
           />
+
+          {/* Click indicator overlay — rendered when a custom position is saved */}
+          {hasIndicator && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                transform: zoom > 1 ? `scale(${zoom}) translate(${panX}%, ${panY}%)` : undefined,
+                transformOrigin: 'center center',
+                pointerEvents: 'none',
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  left: `${step.indicator_x}%`,
+                  top: `${step.indicator_y}%`,
+                  transform: `translate(-50%, -50%) scale(${1 / zoom})`,
+                  width: 40,
+                  height: 40,
+                }}
+              >
+                {/* Outer circle */}
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: '50%',
+                  background: 'rgba(255, 215, 0, 0.35)',
+                  border: '2.5px solid #FFD700',
+                }} />
+                {/* Inner dot */}
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  background: '#FFD700',
+                }} />
+              </div>
+            </div>
+          )}
         </div>
       )}
 

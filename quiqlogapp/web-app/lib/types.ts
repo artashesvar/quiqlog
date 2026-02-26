@@ -24,6 +24,8 @@ export interface Step {
   zoom_level: number
   pan_x: number
   pan_y: number
+  indicator_x: number | null
+  indicator_y: number | null
   created_at: string
 }
 
@@ -36,6 +38,8 @@ export interface User {
 export interface RecordedStep {
   x: number
   y: number
+  viewportWidth?: number
+  viewportHeight?: number
   label: string
   screenshotBase64?: string
   screenshotUrl?: string | null
