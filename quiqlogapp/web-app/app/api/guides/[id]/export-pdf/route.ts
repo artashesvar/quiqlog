@@ -16,6 +16,16 @@ const LINE_HEIGHT = 1.4
 const BLOCK_GAP = 24
 const IMAGE_MAX_HEIGHT = 340
 
+interface CropInfo {
+  buffer: Buffer
+  origW: number
+  origH: number
+  cropLeft: number
+  cropTop: number
+  cropW: number
+  cropH: number
+}
+
 /**
  * Crop a screenshot buffer according to the zoom/pan settings used in the editor.
  *
@@ -24,19 +34,23 @@ const IMAGE_MAX_HEIGHT = 340
  *
  * The visible region is a 1/zoom-sized window centered on the image,
  * then shifted by the pan offsets (which are percentages of the image dimensions).
+ *
+ * Always returns a CropInfo with the original dimensions and crop offset so
+ * callers can map indicator_x/y percentages into the cropped image.
  */
 async function cropScreenshot(
   buffer: Buffer,
   zoomLevel: number,
   panX: number,
   panY: number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<any> {
-  if (zoomLevel <= 1) return buffer
-
+): Promise<CropInfo> {
   const metadata = await sharp(buffer).metadata()
   const imgW = metadata.width!
   const imgH = metadata.height!
+
+  if (zoomLevel <= 1) {
+    return { buffer, origW: imgW, origH: imgH, cropLeft: 0, cropTop: 0, cropW: imgW, cropH: imgH }
+  }
 
   // Visible region size (in pixels)
   const visW = Math.round(imgW / zoomLevel)
@@ -59,9 +73,11 @@ async function cropScreenshot(
   left = Math.max(0, Math.min(left, imgW - visW))
   top = Math.max(0, Math.min(top, imgH - visH))
 
-  return sharp(buffer)
+  const croppedBuffer = await sharp(buffer)
     .extract({ left, top, width: visW, height: visH })
     .toBuffer()
+
+  return { buffer: croppedBuffer, origW: imgW, origH: imgH, cropLeft: left, cropTop: top, cropW: visW, cropH: visH }
 }
 
 /**
@@ -126,7 +142,7 @@ export async function GET(
 
   try {
   // --- Pre-fetch all screenshot images in parallel ---
-  const imageCache = new Map<string, { buffer: Buffer; width: number; height: number }>()
+  const imageCache = new Map<string, { buffer: Buffer; width: number; height: number; origW: number; origH: number; cropLeft: number; cropTop: number; cropW: number; cropH: number }>()
 
   await Promise.all(
     steps
@@ -135,22 +151,26 @@ export async function GET(
         try {
           const res = await fetch(s.screenshot_url!)
           if (!res.ok) return
-          let buffer = Buffer.from(await res.arrayBuffer())
+          const rawBuffer = Buffer.from(await res.arrayBuffer())
 
-          // Apply zoom/pan crop
+          // Apply zoom/pan crop (always called to obtain crop metadata for indicator mapping)
           const zoom = s.zoom_level ?? 1
-          if (zoom > 1) {
-            buffer = await cropScreenshot(buffer, zoom, s.pan_x ?? 0, s.pan_y ?? 0)
-          }
+          const cropInfo = await cropScreenshot(rawBuffer, zoom, s.pan_x ?? 0, s.pan_y ?? 0)
 
           // Convert to PNG for consistent handling in PDFKit
-          const pngBuffer = await sharp(buffer).png().toBuffer()
+          const pngBuffer = await sharp(cropInfo.buffer).png().toBuffer()
           const meta = await sharp(pngBuffer).metadata()
 
           imageCache.set(s.id, {
             buffer: pngBuffer,
             width: meta.width!,
             height: meta.height!,
+            origW: cropInfo.origW,
+            origH: cropInfo.origH,
+            cropLeft: cropInfo.cropLeft,
+            cropTop: cropInfo.cropTop,
+            cropW: cropInfo.cropW,
+            cropH: cropInfo.cropH,
           })
         } catch {
           // Skip images that fail to fetch/process
@@ -231,6 +251,43 @@ export async function GET(
           width: imgDims.width,
           height: imgDims.height,
         })
+
+        // Draw indicator circle if a position is saved and falls within the visible crop region
+        if (item.indicator_x !== null && item.indicator_y !== null) {
+          // Map percentage of original image → fraction within the crop region
+          const px = (item.indicator_x / 100) * img.origW
+          const py = (item.indicator_y / 100) * img.origH
+          const fx = (px - img.cropLeft) / img.cropW
+          const fy = (py - img.cropTop) / img.cropH
+
+          if (fx >= 0 && fx <= 1 && fy >= 0 && fy <= 1) {
+            const circleCx = imgX + fx * imgDims.width
+            const circleCy = imgY + fy * imgDims.height
+            // Scale radius proportionally to the displayed image size
+            const scale = imgDims.width / img.cropW
+            const outerR = Math.max(5, 20 * scale)
+            const innerR = Math.max(2, 5 * scale)
+
+            // Outer circle — semi-transparent fill
+            doc.save()
+            doc.fillColor('#FFD700').fillOpacity(0.35)
+            doc.circle(circleCx, circleCy, outerR).fill()
+            doc.restore()
+
+            // Outer circle — solid border
+            doc.save()
+            doc.strokeColor('#FFD700').lineWidth(2).strokeOpacity(1)
+            doc.circle(circleCx, circleCy, outerR).stroke()
+            doc.restore()
+
+            // Inner dot — solid gold
+            doc.save()
+            doc.fillColor('#FFD700').fillOpacity(1)
+            doc.circle(circleCx, circleCy, innerR).fill()
+            doc.restore()
+          }
+        }
+
         doc.y = imgY + imgDims.height + pad * 2
         doc.moveDown(0.5)
       }
