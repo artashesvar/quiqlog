@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -63,9 +64,8 @@ export default function AppNav({ userEmail, hasSubscription, isPro, isCanceled, 
   return (
     <nav className="border-b border-border bg-background-secondary/80 backdrop-blur-sm sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-        <Link href="/home" className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-accent shadow-glow" />
-          <span className="font-heading font-bold text-base text-text-primary">Quiqlog</span>
+        <Link href="/home">
+          <Image src="/logo.png" alt="Quiqlog" width={673} height={371} className="h-8 w-auto" priority />
         </Link>
 
         <div className="relative" ref={menuRef}>
