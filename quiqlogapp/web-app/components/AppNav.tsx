@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { EXTENSION_ID } from '@/lib/constants'
+import { EXTENSION_IDS } from '@/lib/constants'
 
 interface AppNavProps {
   userEmail?: string
@@ -26,11 +26,13 @@ export default function AppNav({ userEmail, hasSubscription, isPro, isCanceled, 
     await supabase.auth.signOut()
     const win = window as any
     if (win.chrome?.runtime?.sendMessage) {
-      try {
-        win.chrome.runtime.sendMessage(EXTENSION_ID, { type: 'CLEAR_TOKEN' }, () => {
-          win.chrome.runtime.lastError
-        })
-      } catch {}
+      for (const id of EXTENSION_IDS) {
+        try {
+          win.chrome.runtime.sendMessage(id, { type: 'CLEAR_TOKEN' }, () => {
+            win.chrome.runtime.lastError
+          })
+        } catch {}
+      }
     }
     router.push('/login')
     router.refresh()
@@ -63,9 +65,9 @@ export default function AppNav({ userEmail, hasSubscription, isPro, isCanceled, 
 
   return (
     <nav className="border-b border-border bg-background-secondary/80 backdrop-blur-sm sticky top-0 z-40">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+      <div className="pl-6 pr-4 sm:pr-6 h-[62px] flex items-center justify-between">
         <Link href="/home">
-          <Image src="/logo.png" alt="Quiqlog" width={473} height={154} className="h-8 w-auto" priority />
+          <Image src="/logo1.png" alt="Quiqlog" width={360} height={200} className="h-[60px] w-auto" priority />
         </Link>
 
         <div className="relative" ref={menuRef}>

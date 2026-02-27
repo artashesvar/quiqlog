@@ -2,18 +2,20 @@
 
 import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { EXTENSION_ID } from '@/lib/constants'
+import { EXTENSION_IDS } from '@/lib/constants'
 
 function sendToExtension(message: object) {
   const win = window as any
   if (!win.chrome?.runtime?.sendMessage) return
-  try {
-    win.chrome.runtime.sendMessage(
-      EXTENSION_ID,
-      message,
-      () => { win.chrome.runtime.lastError /* suppress error */ }
-    )
-  } catch {}
+  for (const id of EXTENSION_IDS) {
+    try {
+      win.chrome.runtime.sendMessage(
+        id,
+        message,
+        () => { win.chrome.runtime.lastError /* suppress error */ }
+      )
+    } catch {}
+  }
 }
 
 export default function TokenSync() {

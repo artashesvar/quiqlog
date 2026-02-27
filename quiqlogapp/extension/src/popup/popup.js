@@ -1,7 +1,5 @@
 // Quiqlog Popup Script
 
-const APP_URL = 'https://quiqlog-git-staging-artashesvardanyan-9805s-projects.vercel.app'
-
 const recordBtn = document.getElementById('record-btn')
 const recordLabel = document.getElementById('record-label')
 const recordIcon = document.getElementById('record-icon')

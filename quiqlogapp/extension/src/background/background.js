@@ -1,7 +1,7 @@
 // Quiqlog Background Service Worker
 // Handles: recording state, screenshot capture, annotation, session upload
 
-const APP_URL = 'https://quiqlog-git-staging-artashesvardanyan-9805s-projects.vercel.app'
+importScripts('src/config.js')
 
 // ─── In-memory state (avoids read/write race conditions) ─────────────────────
 let recording = false
@@ -203,6 +203,7 @@ async function startRecording(tabId = null) {
 }
 
 async function stopRecording() {
+  await stateReady // ensure steps are restored from storage if the SW just restarted
   recording = false
   chrome.tabs.onUpdated.removeListener(onTabUpdated)
   // Notify the popup immediately so it resets even if the user stopped via the

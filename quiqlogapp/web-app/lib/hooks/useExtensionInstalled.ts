@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { EXTENSION_ID } from '@/lib/constants'
+import { EXTENSION_IDS } from '@/lib/constants'
 
 /**
  * Detects whether the Quiqlog Chrome extension is installed by sending
@@ -24,21 +24,23 @@ export function useExtensionInstalled(): boolean | null {
       return
     }
 
-    try {
-      win.chrome.runtime.sendMessage(
-        EXTENSION_ID,
-        { type: 'PING' },
-        (response: any) => {
-          if (win.chrome.runtime.lastError) {
-            setInstalled(false)
-          } else {
-            setInstalled(!!response?.alive)
+    let responded = false
+    for (const id of EXTENSION_IDS) {
+      try {
+        win.chrome.runtime.sendMessage(
+          id,
+          { type: 'PING' },
+          (response: any) => {
+            if (!win.chrome.runtime.lastError && response?.alive) {
+              responded = true
+              setInstalled(true)
+            }
           }
-        }
-      )
-    } catch {
-      setInstalled(false)
+        )
+      } catch {}
     }
+    // If neither extension responds, mark as not installed after a short delay
+    setTimeout(() => { if (!responded) setInstalled(false) }, 500)
   }, [])
 
   return installed
