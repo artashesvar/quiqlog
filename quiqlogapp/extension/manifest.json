@@ -32,6 +32,7 @@
   },
   "externally_connectable": {
     "matches": [
+      "https://app.quiqlog.com/*",
       "https://quiqlog-git-staging-artashesvardanyan-9805s-projects.vercel.app/*"
     ]
   },
