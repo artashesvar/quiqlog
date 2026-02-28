@@ -32,7 +32,7 @@
   },
   "externally_connectable": {
     "matches": [
-      "http://localhost:3000/*"
+      "https://quiqlog-git-staging-artashesvardanyan-9805s-projects.vercel.app/*"
     ]
   },
   "web_accessible_resources": [
