@@ -11,20 +11,16 @@
     <!-- Header -->
     <div class="header">
       <div class="logo">
-        <div class="logo-dot"></div>
-        <span class="logo-text">Quiqlog</span>
+        <img src="../../icons/logo1.png" alt="Quiqlog" class="logo-img" />
       </div>
-      <div id="status-badge" class="status-badge status-idle">
-        <span id="status-dot" class="status-dot"></span>
-        <span id="status-text">Idle</span>
-      </div>
+      <button id="close-btn" class="close-btn" title="Close">&#x2715;</button>
     </div>
 
     <!-- Not logged in state -->
     <div id="auth-section" class="section" style="display:none;">
-      <p class="hint-text">Log in to start recording guides.</p>
+      <p class="hint-text">Sign in or create an account to capture and access your guides.</p>
       <a id="login-link" class="btn btn-primary" href="#" target="_blank">
-        Open Quiqlog
+        Sign In to Quiqlog
       </a>
     </div>
 
@@ -63,17 +59,10 @@
       </button>
 
       <p class="hint-text">
-        Click <strong>Start Recording</strong>, then interact with any webpage.<br/>
-        Every click is automatically captured.
+        Click <strong>Start Recording</strong>, then interact with any webpage.
       </p>
     </div>
 
-    <!-- Footer -->
-    <div class="footer">
-      <a id="dashboard-link" href="#" target="_blank" class="footer-link">
-        Open Dashboard →
-      </a>
-    </div>
   </div>
 
   <script src="../config.js"></script>

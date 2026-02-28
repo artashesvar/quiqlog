@@ -3,8 +3,6 @@
 const recordBtn = document.getElementById('record-btn')
 const recordLabel = document.getElementById('record-label')
 const recordIcon = document.getElementById('record-icon')
-const statusBadge = document.getElementById('status-badge')
-const statusText = document.getElementById('status-text')
 const stepCountDisplay = document.getElementById('step-count-display')
 const stepCountEl = document.getElementById('step-count')
 const recordingSection = document.getElementById('recording-section')
@@ -15,7 +13,6 @@ const tabList = document.getElementById('tab-list')
 const tabPickerHint = document.getElementById('tab-picker-hint')
 const confirmTabBtn = document.getElementById('confirm-tab-btn')
 const loginLink = document.getElementById('login-link')
-const dashboardLink = document.getElementById('dashboard-link')
 
 let isRecording = false
 let selectedTabId = null
@@ -23,7 +20,8 @@ let selectedTab = null
 
 // Set links
 loginLink.href = APP_URL + '/login'
-dashboardLink.href = APP_URL + '/home'
+
+document.getElementById('close-btn').addEventListener('click', () => window.close())
 
 function updateUI(recording, stepCount = 0, hasToken = false) {
   isRecording = recording
@@ -32,8 +30,6 @@ function updateUI(recording, stepCount = 0, hasToken = false) {
   if (!hasToken) {
     authSection.style.display = 'flex'
     recordingSection.style.display = 'none'
-    statusBadge.className = 'status-badge status-idle'
-    statusText.textContent = 'Not logged in'
     return
   }
 
@@ -41,9 +37,6 @@ function updateUI(recording, stepCount = 0, hasToken = false) {
   recordingSection.style.display = 'flex'
 
   if (recording) {
-    statusBadge.className = 'status-badge status-recording'
-    statusText.textContent = 'Recording'
-
     recordBtn.className = 'btn btn-danger'
     recordLabel.textContent = 'Stop Recording'
     recordIcon.innerHTML = '<rect x="4" y="4" width="16" height="16" rx="2"/>'
@@ -53,9 +46,6 @@ function updateUI(recording, stepCount = 0, hasToken = false) {
       stepCountEl.textContent = stepCount
     }
   } else {
-    statusBadge.className = 'status-badge status-idle'
-    statusText.textContent = 'Idle'
-
     recordBtn.className = 'btn btn-primary'
     recordLabel.textContent = 'Start Recording'
     recordIcon.innerHTML = '<circle cx="12" cy="12" r="10"/>'

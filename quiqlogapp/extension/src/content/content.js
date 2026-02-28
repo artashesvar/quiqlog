@@ -15,6 +15,10 @@
 
   const OVERLAY_FRAME_ID = '__quiqlog_overlay_frame__'
   const STOP_BTN_ID = '__quiqlog_stop_btn__'
+  const PANEL_ID = '__quiqlog_panel__'
+  const PANEL_HEADER_ID = '__quiqlog_panel_header__'
+  const PANEL_LIST_ID = '__quiqlog_panel_list__'
+  const PANEL_THUMB_ID = '__quiqlog_panel_thumb__'
 
   // ─── Recording Indicator Overlay ────────────────────────────────────────────
 
@@ -68,18 +72,205 @@
   function removeRecordingOverlay() {
     document.getElementById(OVERLAY_FRAME_ID)?.remove()
     document.getElementById(STOP_BTN_ID)?.remove()
+    removePreviewPanel()
   }
 
   function setOverlayVisibility(visible) {
     const v = visible ? 'visible' : 'hidden'
     const frame = document.getElementById(OVERLAY_FRAME_ID)
     const btn = document.getElementById(STOP_BTN_ID)
+    const panel = document.getElementById(PANEL_ID)
     if (frame) frame.style.visibility = v
     if (btn) btn.style.visibility = v
+    if (panel) panel.style.visibility = v
     // Also hide any click-feedback circles so they don't appear in screenshots
     document.querySelectorAll('.__quiqlog_circle__').forEach(el => {
       el.style.visibility = v
     })
+  }
+
+  // ─── Live Preview Panel ──────────────────────────────────────────────────────
+
+  function createTrashIcon() {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    svg.setAttribute('width', '11')
+    svg.setAttribute('height', '11')
+    svg.setAttribute('viewBox', '0 0 24 24')
+    svg.setAttribute('fill', 'none')
+    svg.setAttribute('stroke', 'currentColor')
+    svg.setAttribute('stroke-width', '2.5')
+    svg.setAttribute('stroke-linecap', 'round')
+    svg.setAttribute('stroke-linejoin', 'round')
+    svg.style.cssText = 'pointer-events:none;display:block;'
+    const lid = document.createElementNS('http://www.w3.org/2000/svg', 'polyline')
+    lid.setAttribute('points', '3 6 5 6 21 6')
+    const body = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    body.setAttribute('d', 'M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2')
+    svg.appendChild(lid)
+    svg.appendChild(body)
+    return svg
+  }
+
+  function createPreviewPanel() {
+    if (document.getElementById(PANEL_ID)) return // already exists
+
+    const panel = document.createElement('div')
+    panel.id = PANEL_ID
+
+    // Header — acts as the drag handle
+    const header = document.createElement('div')
+    header.id = PANEL_HEADER_ID
+    const dot = document.createElement('span')
+    dot.className = '__quiqlog_red_dot__'
+    header.appendChild(dot)
+    header.appendChild(document.createTextNode('\u00A0Recording...'))
+
+    // Scrollable list of previous steps
+    const list = document.createElement('div')
+    list.id = PANEL_LIST_ID
+    list.style.display = 'none'
+
+    // Thumbnail for the most recent step
+    const thumb = document.createElement('div')
+    thumb.id = PANEL_THUMB_ID
+    thumb.style.display = 'none'
+
+    panel.appendChild(header)
+    panel.appendChild(list)
+    panel.appendChild(thumb)
+
+    // Set initial position as plain inline styles (not !important) so the
+    // drag handler can freely override them with JS inline style assignments.
+    panel.style.bottom = '20px'
+    panel.style.left = '20px'
+
+    document.body.appendChild(panel)
+
+    setupPanelDrag(panel, header)
+  }
+
+  function removePreviewPanel() {
+    document.getElementById(PANEL_ID)?.remove()
+  }
+
+  function setupPanelDrag(panel, handle) {
+    let isDragging = false
+    let startX = 0, startY = 0, startLeft = 0, startTop = 0
+
+    handle.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return
+      isDragging = true
+      startX = e.clientX
+      startY = e.clientY
+      const rect = panel.getBoundingClientRect()
+      startLeft = rect.left
+      startTop = rect.top
+      e.preventDefault()
+    })
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return
+      const newLeft = startLeft + (e.clientX - startX)
+      const newTop = startTop + (e.clientY - startY)
+      // Clamp to viewport so panel can't be dragged fully off-screen
+      const maxLeft = window.innerWidth - panel.offsetWidth
+      const maxTop = window.innerHeight - panel.offsetHeight
+      panel.style.left = `${Math.max(0, Math.min(newLeft, maxLeft))}px`
+      panel.style.top = `${Math.max(0, Math.min(newTop, maxTop))}px`
+      // Switch from bottom/right anchoring to top/left once the user drags
+      panel.style.bottom = 'auto'
+      panel.style.right = 'auto'
+    })
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false
+    })
+  }
+
+  function updatePanelSteps(steps) {
+    const list = document.getElementById(PANEL_LIST_ID)
+    const thumb = document.getElementById(PANEL_THUMB_ID)
+    if (!list || !thumb) return
+
+    list.innerHTML = ''
+    thumb.innerHTML = ''
+
+    if (steps.length === 0) {
+      list.style.display = 'none'
+      thumb.style.display = 'none'
+      return
+    }
+
+    // All steps except the last → scrollable list
+    const previousSteps = steps.slice(0, -1)
+    if (previousSteps.length > 0) {
+      list.style.display = 'block'
+      previousSteps.forEach((step, i) => {
+        const item = document.createElement('div')
+        item.className = '__quiqlog_step_item__'
+
+        const labelSpan = document.createElement('span')
+        labelSpan.className = '__quiqlog_step_label__'
+        const truncated = step.label ? step.label.slice(0, 15) : ''
+        labelSpan.textContent = truncated ? `Step ${i + 1}: ${truncated}` : `Step ${i + 1}`
+
+        const deleteBtn = document.createElement('button')
+        deleteBtn.className = '__quiqlog_step_delete__'
+        deleteBtn.appendChild(createTrashIcon())
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          chrome.runtime.sendMessage({ type: 'DELETE_STEP', index: i })
+        })
+
+        item.appendChild(labelSpan)
+        item.appendChild(deleteBtn)
+        list.appendChild(item)
+      })
+      // Keep the most recent past step in view
+      list.scrollTop = list.scrollHeight
+    } else {
+      list.style.display = 'none'
+    }
+
+    // Most recent step → thumbnail
+    thumb.style.display = 'block'
+    const lastStep = steps[steps.length - 1]
+    const lastIndex = steps.length - 1
+
+    const thumbLabel = document.createElement('div')
+    thumbLabel.className = '__quiqlog_thumb_label__'
+    const truncatedLast = lastStep.label ? lastStep.label.slice(0, 15) : ''
+    thumbLabel.textContent = truncatedLast
+      ? `Step ${lastIndex + 1}: ${truncatedLast}`
+      : `Step ${lastIndex + 1}`
+
+    const thumbWrapper = document.createElement('div')
+    thumbWrapper.className = '__quiqlog_thumb_wrapper__'
+
+    if (lastStep.screenshotUrl) {
+      const img = document.createElement('img')
+      img.className = '__quiqlog_thumb_img__'
+      img.src = lastStep.screenshotUrl
+      img.alt = `Step ${lastIndex + 1}`
+      thumbWrapper.appendChild(img)
+    } else {
+      const placeholder = document.createElement('div')
+      placeholder.className = '__quiqlog_thumb_placeholder__'
+      placeholder.textContent = 'No screenshot'
+      thumbWrapper.appendChild(placeholder)
+    }
+
+    const thumbDeleteBtn = document.createElement('button')
+    thumbDeleteBtn.className = '__quiqlog_thumb_delete__'
+    thumbDeleteBtn.appendChild(createTrashIcon())
+    thumbDeleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      chrome.runtime.sendMessage({ type: 'DELETE_STEP', index: lastIndex })
+    })
+    thumbWrapper.appendChild(thumbDeleteBtn)
+
+    thumb.appendChild(thumbLabel)
+    thumb.appendChild(thumbWrapper)
   }
 
   // ─── Overlay Circle ─────────────────────────────────────────────────────────
@@ -205,6 +396,7 @@
     // Ignore clicks on our own overlay elements
     if (event.target.className === '__quiqlog_circle__') return
     if (event.target.closest?.(`#${STOP_BTN_ID}`)) return
+    if (event.target.closest?.(`#${PANEL_ID}`)) return
 
     const x = event.clientX
     const y = event.clientY
@@ -243,6 +435,7 @@
       isRecording = message.value
       if (message.value) {
         createRecordingOverlay()
+        createPreviewPanel()
         startKeepalive()
       } else {
         removeRecordingOverlay()
@@ -263,12 +456,27 @@
     if (message.type === 'SHOW_OVERLAY') {
       setOverlayVisibility(true)
     }
+
+    if (message.type === 'PANEL_STEPS_UPDATE') {
+      updatePanelSteps(message.steps)
+    }
   })
 
   // ─── Init ───────────────────────────────────────────────────────────────────
 
   createRecordingOverlay()
+  createPreviewPanel()
   startKeepalive()
   document.addEventListener('mousedown', handleClick, { capture: true, passive: true })
+
+  // Repopulate panel with steps captured on previous pages (navigation case).
+  // GET_PANEL_STEPS is a content-script-safe endpoint on the background that
+  // returns only label + screenshotUrl, without the sensitive authToken.
+  chrome.runtime.sendMessage({ type: 'GET_PANEL_STEPS' }, (response) => {
+    if (response && response.steps && response.steps.length > 0) {
+      updatePanelSteps(response.steps)
+    }
+  })
+
   console.log('[Quiqlog] Content script loaded on', window.location.hostname)
 })()

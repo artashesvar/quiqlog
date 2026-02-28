@@ -25,3 +25,192 @@
   background: #4F46E5 !important;
   box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
 }
+
+/* ─── Live Preview Panel ─────────────────────────────────────────────────────── */
+
+@keyframes __quiqlog_blink__ {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+#__quiqlog_panel__ {
+  position: fixed !important;
+  width: 224px !important;
+  background: #6366F1 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 8px 40px rgba(99, 102, 241, 0.35) !important;
+  z-index: 2147483645 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 13px !important;
+  color: #FFFFFF !important;
+  overflow: hidden !important;
+  user-select: none !important;
+  box-sizing: border-box !important;
+}
+
+#__quiqlog_panel_header__ {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  padding: 8px 10px !important;
+  cursor: grab !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.02em !important;
+  box-sizing: border-box !important;
+}
+
+#__quiqlog_panel_header__:active {
+  cursor: grabbing !important;
+}
+
+.__quiqlog_red_dot__ {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #FCA5A5 !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+  animation: __quiqlog_blink__ 1.2s ease-in-out infinite !important;
+}
+
+#__quiqlog_panel_list__ {
+  max-height: 160px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 4px 0 !important;
+  box-sizing: border-box !important;
+}
+
+#__quiqlog_panel_list__::-webkit-scrollbar {
+  width: 4px !important;
+}
+
+#__quiqlog_panel_list__::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+#__quiqlog_panel_list__::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-radius: 2px !important;
+}
+
+.__quiqlog_step_item__ {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 5px 10px !important;
+  gap: 6px !important;
+  box-sizing: border-box !important;
+  transition: background 0.1s !important;
+}
+
+.__quiqlog_step_item__:hover {
+  background: rgba(0, 0, 0, 0.12) !important;
+}
+
+.__quiqlog_step_label__ {
+  flex: 1 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 12px !important;
+}
+
+.__quiqlog_step_delete__ {
+  flex-shrink: 0 !important;
+  width: 18px !important;
+  height: 18px !important;
+  background: transparent !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  cursor: pointer !important;
+  border-radius: 3px !important;
+  font-size: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  transition: color 0.15s, background 0.15s !important;
+  box-sizing: border-box !important;
+}
+
+.__quiqlog_step_delete__:hover {
+  color: #FFFFFF !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+
+#__quiqlog_panel_thumb__ {
+  padding: 6px 8px 8px !important;
+  box-sizing: border-box !important;
+}
+
+.__quiqlog_thumb_label__ {
+  font-size: 10px !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  margin-bottom: 4px !important;
+  padding: 0 2px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+
+.__quiqlog_thumb_wrapper__ {
+  position: relative !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  line-height: 0 !important;
+}
+
+.__quiqlog_thumb_img__ {
+  width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  border-radius: 6px !important;
+}
+
+.__quiqlog_thumb_placeholder__ {
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  background: rgba(0, 0, 0, 0.15) !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-size: 11px !important;
+  box-sizing: border-box !important;
+}
+
+.__quiqlog_thumb_delete__ {
+  position: absolute !important;
+  top: 4px !important;
+  right: 4px !important;
+  width: 20px !important;
+  height: 20px !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  cursor: pointer !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  transition: color 0.15s, background 0.15s !important;
+  box-sizing: border-box !important;
+}
+
+.__quiqlog_thumb_delete__:hover {
+  color: #FFFFFF !important;
+  background: rgba(0, 0, 0, 0.75) !important;
+}

@@ -157,6 +157,13 @@ async function processClick({ x, y, viewportWidth, viewportHeight, label, url, p
 
     await chrome.storage.local.set({ steps, stepCount: steps.length })
     chrome.runtime.sendMessage({ type: 'STEP_COUNT', count: steps.length }).catch(() => {})
+    // Send updated step list to the content script so the preview panel updates.
+    if (targetTabId !== null) {
+      chrome.tabs.sendMessage(targetTabId, {
+        type: 'PANEL_STEPS_UPDATE',
+        steps: steps.map(s => ({ label: s.label, screenshotUrl: s.screenshotUrl })),
+      }).catch(() => {})
+    }
     console.log(`[Quiqlog] Step ${steps.length} recorded: "${label}" (screenshot: ${screenshotUrl ? 'yes' : 'no'})`)
   } catch (err) {
     console.error('[Quiqlog] Error processing click:', err)
@@ -339,6 +346,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // wakes from sleep and GET_STATE arrives before storage has been read.
     stateReady.then(() => sendResponse({ recording, steps, authToken }))
     return true // keep message channel open for async response
+  }
+
+  // Content-script-safe endpoint — returns only the data needed for the preview
+  // panel (label + screenshotUrl), without the sensitive authToken.
+  if (type === 'GET_PANEL_STEPS') {
+    stateReady.then(() =>
+      sendResponse({ steps: steps.map(s => ({ label: s.label, screenshotUrl: s.screenshotUrl })) })
+    )
+    return true
+  }
+
+  if (type === 'DELETE_STEP') {
+    const { index } = message
+    if (index >= 0 && index < steps.length) {
+      steps.splice(index, 1)
+      chrome.storage.local.set({ steps, stepCount: steps.length })
+      chrome.runtime.sendMessage({ type: 'STEP_COUNT', count: steps.length }).catch(() => {})
+      if (targetTabId !== null) {
+        chrome.tabs.sendMessage(targetTabId, {
+          type: 'PANEL_STEPS_UPDATE',
+          steps: steps.map(s => ({ label: s.label, screenshotUrl: s.screenshotUrl })),
+        }).catch(() => {})
+      }
+    }
+    sendResponse({ ok: true })
+    return false
   }
 
   return false
