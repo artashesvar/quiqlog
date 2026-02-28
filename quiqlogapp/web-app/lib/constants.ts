@@ -1,6 +1,6 @@
 export const APP_NAME = 'Quiqlog'
 
-export const DEV_EXTENSION_ID  = 'mbhpdbjlkcacgpgfpjpeeocpobbkfkgg' // unpacked / local+staging
+export const DEV_EXTENSION_ID  = 'mbhpdbjlkcacgpgfpjpeeocpobbkfkgg' // unpacked / localhost only
 export const PROD_EXTENSION_ID = 'iopeebakhepefmglmdphjmjkibdefeoe' // published Chrome Web Store
 export const EXTENSION_IDS = [DEV_EXTENSION_ID, PROD_EXTENSION_ID]
 
