@@ -81,6 +81,22 @@ async function cropScreenshot(
 }
 
 /**
+ * Replace common Unicode characters that PDFKit's built-in fonts (Latin-1 only)
+ * cannot encode, then strip anything else above U+00FF.
+ */
+function sanitizePdfText(text: string): string {
+  return text
+    .replace(/\u2013/g, '-')         // en dash
+    .replace(/\u2014/g, '--')        // em dash
+    .replace(/[\u2018\u2019]/g, "'") // smart single quotes
+    .replace(/[\u201C\u201D]/g, '"') // smart double quotes
+    .replace(/\u2026/g, '...')       // ellipsis
+    .replace(/\u2022/g, '*')         // bullet
+    .replace(/\u00A0/g, ' ')         // non-breaking space
+    .replace(/[^\x00-\xFF]/g, '')    // strip remaining non-Latin-1
+}
+
+/**
  * Estimate the height a block of text will occupy when rendered in the PDF.
  */
 function estimateTextHeight(
@@ -202,7 +218,7 @@ export async function GET(
 
   // --- Guide Title ---
   doc.font('Helvetica-Bold').fontSize(TITLE_FONT_SIZE)
-  doc.text(guide.title || 'Untitled Guide', { width: CONTENT_WIDTH })
+  doc.text(sanitizePdfText(guide.title || 'Untitled Guide'), { width: CONTENT_WIDTH })
   doc.moveDown(1.5)
 
   // --- Render each item ---
@@ -212,9 +228,9 @@ export async function GET(
     if (item.type === 'step') {
       stepNumber++
 
-      const title = item.title
+      const title = sanitizePdfText(item.title
         ? `Step ${stepNumber}: ${item.title}`
-        : `Step ${stepNumber}`
+        : `Step ${stepNumber}`)
 
       // Estimate total height for this step
       const titleH = estimateTextHeight(doc, title, STEP_TITLE_FONT_SIZE, CONTENT_WIDTH) + 4
@@ -222,7 +238,7 @@ export async function GET(
       const imgDims = img ? fitImage(img.width, img.height) : null
       const imgH = imgDims ? imgDims.height + 8 : 0
       const descH = item.description
-        ? estimateTextHeight(doc, item.description, BODY_FONT_SIZE, CONTENT_WIDTH) + 4
+        ? estimateTextHeight(doc, sanitizePdfText(item.description), BODY_FONT_SIZE, CONTENT_WIDTH) + 4
         : 0
       const totalH = titleH + imgH + descH + BLOCK_GAP
 
@@ -295,7 +311,7 @@ export async function GET(
       // Description
       if (item.description) {
         doc.font('Helvetica').fontSize(BODY_FONT_SIZE)
-        doc.text(item.description, {
+        doc.text(sanitizePdfText(item.description), {
           width: CONTENT_WIDTH,
           lineGap: BODY_FONT_SIZE * (LINE_HEIGHT - 1),
         })
@@ -305,8 +321,8 @@ export async function GET(
     } else {
       // Tip or Alert block
       const label = item.type === 'tip' ? 'TIP' : 'ALERT'
-      const heading = item.title ? `${label}: ${item.title}` : label
-      const body = item.description || ''
+      const heading = sanitizePdfText(item.title ? `${label}: ${item.title}` : label)
+      const body = sanitizePdfText(item.description || '')
 
       const headingH = estimateTextHeight(doc, heading, STEP_TITLE_FONT_SIZE, CONTENT_WIDTH - 16) + 4
       const bodyH = body
