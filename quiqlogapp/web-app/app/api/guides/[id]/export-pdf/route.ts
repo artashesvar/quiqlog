@@ -375,8 +375,8 @@ export async function GET(
     doc.on('end', () => resolve(Buffer.concat(chunks)))
   })
 
-  // Sanitize filename
-  const filename = (guide.title || 'guide')
+  // Sanitize filename — must be ASCII only for Content-Disposition header
+  const filename = sanitizePdfText(guide.title || 'guide')
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
     .replace(/\s+/g, '-')
     .trim() || 'guide'
