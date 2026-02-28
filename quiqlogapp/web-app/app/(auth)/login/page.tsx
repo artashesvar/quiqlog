@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { EXTENSION_IDS } from '@/lib/constants'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
@@ -11,6 +12,18 @@ import { Card } from '@/components/ui/Card'
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
+
+  // Safety net: clear any stale extension token whenever the login page loads.
+  // Covers cases where CLEAR_TOKEN was missed (session expiry, hard reload, etc.)
+  useEffect(() => {
+    const win = window as any
+    if (!win.chrome?.runtime?.sendMessage) return
+    for (const id of EXTENSION_IDS) {
+      try {
+        win.chrome.runtime.sendMessage(id, { type: 'CLEAR_TOKEN' }, () => { win.chrome.runtime.lastError })
+      } catch {}
+    }
+  }, [])
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)

@@ -1,7 +1,7 @@
 // Quiqlog Background Service Worker
 // Handles: recording state, screenshot capture, annotation, session upload
 
-importScripts('src/config.js')
+importScripts('../config.js')
 
 // ─── In-memory state (avoids read/write race conditions) ─────────────────────
 let recording = false
@@ -10,12 +10,22 @@ let authToken = null
 let targetTabId = null // tab the user selected to record; null = record all tabs
 let sessionId = null   // unique ID per recording session, used in upload path
 
+// When the service worker wakes from sleep, a STORE_TOKEN or CLEAR_TOKEN
+// external message can arrive before the initial storage read (stateReady)
+// completes. If stateReady then resolves and sets authToken from storage it
+// would overwrite the value the message just applied. pendingAuthToken captures
+// the message value so stateReady uses it instead of the stale storage value.
+let pendingAuthToken = undefined // undefined = no override pending
+
 // Load persisted state on startup.
 // Stored as a promise so startRecording can await it to avoid race conditions
 // when the service worker restarts and a message arrives before storage is read.
 const stateReady = chrome.storage.local.get(['recording', 'authToken', 'steps', 'targetTabId', 'sessionId']).then(result => {
   recording = result.recording ?? false
-  authToken = result.authToken ?? null
+  // Prefer any token written by a STORE_TOKEN/CLEAR_TOKEN message that arrived
+  // while this storage read was in-flight; fall back to the stored value.
+  authToken = pendingAuthToken !== undefined ? pendingAuthToken : (result.authToken ?? null)
+  pendingAuthToken = undefined
   steps = result.steps ?? []
   targetTabId = result.targetTabId ?? null
   sessionId = result.sessionId ?? null
@@ -342,12 +352,18 @@ chrome.runtime.onMessageExternal.addListener((message, _sender, sendResponse) =>
     return false
   }
   if (message.type === 'STORE_TOKEN') {
+    // Set synchronously so the service worker stays alive for the I/O write
+    // (Chrome may terminate the SW after the handler returns if no I/O is pending).
+    // pendingAuthToken guards against stateReady overwriting this if the SW just
+    // woke up and the storage read hasn't resolved yet.
     authToken = message.token
+    pendingAuthToken = message.token
     chrome.storage.local.set({ authToken: message.token }).then(() => sendResponse({ ok: true }))
     return true
   }
   if (message.type === 'CLEAR_TOKEN') {
     authToken = null
+    pendingAuthToken = null
     chrome.storage.local.set({ authToken: null }).then(() => sendResponse({ ok: true }))
     return true
   }
