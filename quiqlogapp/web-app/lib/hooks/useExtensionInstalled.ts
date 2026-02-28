@@ -24,23 +24,28 @@ export function useExtensionInstalled(): boolean | null {
       return
     }
 
-    let responded = false
+    let active = true
+    let remaining = EXTENSION_IDS.length
+
     for (const id of EXTENSION_IDS) {
       try {
-        win.chrome.runtime.sendMessage(
-          id,
-          { type: 'PING' },
-          (response: any) => {
-            if (!win.chrome.runtime.lastError && response?.alive) {
-              responded = true
-              setInstalled(true)
-            }
+        win.chrome.runtime.sendMessage(id, { type: 'PING' }, (response: any) => {
+          if (!active) return
+          remaining--
+          if (!win.chrome.runtime.lastError && response?.alive) {
+            active = false
+            setInstalled(true)
+          } else if (remaining === 0) {
+            setInstalled(false)
           }
-        )
-      } catch {}
+        })
+      } catch {
+        remaining--
+        if (remaining === 0 && active) setInstalled(false)
+      }
     }
-    // If neither extension responds, mark as not installed after a short delay
-    setTimeout(() => { if (!responded) setInstalled(false) }, 500)
+
+    return () => { active = false }
   }, [])
 
   return installed
