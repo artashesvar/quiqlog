@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import GuideList from '@/components/dashboard/GuideList'
 import NewGuideButton from '@/components/dashboard/NewGuideButton'
@@ -6,10 +7,13 @@ export const metadata = { title: 'Dashboard' }
 
 export default async function DashboardPage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
   const { data: guides } = await supabase
     .from('guides')
     .select('*, steps(count)')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   const formattedGuides = (guides ?? []).map((g: any) => ({
